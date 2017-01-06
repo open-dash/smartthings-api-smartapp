@@ -30,7 +30,7 @@ definition(
     iconUrl: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience.png",
     iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience@2x.png",
 )
-def appVersion() {"0.0.4"}
+def appVersion() {"0.0.5"}
 
 mappings {
     // location
@@ -87,7 +87,6 @@ private def getCapabilities() {
         ["capability.motionSensor",					"Motion",						"motionSensors",					"motion"					],
         ["capability.musicPlayer",					"Music Player",					"musicPlayer",						""							],
         ["capability.pHMeasurement",				"pH Measurement",				"pHMeasurements",					"pH"						],
-        ["capability.motionSensor",					"Motion",						"motionSensors",					""							],
         ["capability.powerMeter",					"Power Meter",					"powerMeters",						"power"						],
         ["capability.power",						"Power",						"powers",							"powerSource"				],
         ["capability.presenceSensor",				"Presence",						"presenceSensors",					"presence"					],
@@ -101,7 +100,7 @@ private def getCapabilities() {
         ["capability.soundSensor",					"Sound Sensor",					"soundSensors",						"sound"						],
         ["capability.speechRecognition",			"Speech Recognition",			"speechRecognitions",				"phraseSpoken"				],
         ["capability.stepSensor",					"Step Sensor",					"stepSensors",						"steps"						],
-        ["capability.switch",						"Switchs", 						"switches",							"switch"					],
+        ["capability.switch",						"Switches", 						"switches",							"switch"					],
         ["capability.switchLevel",					"Level",						"switchLevels",						"level"						],
         ["capability.soundPressureLevel",			"Sound Pressure Level",			"soundPressureLevels",				"soundPressureLevel"		],
         ["capability.tamperAlert",					"Tamper Alert",					"tamperAlert",						"tamper"					],

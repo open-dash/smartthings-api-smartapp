@@ -10,10 +10,13 @@
 *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
 *  for the specific language governing permissions and limitations under the License.
 *
-*  Open-Dash API
+*  Open-Dash API SmartApp
 *
 *  Author: Open-Dash
 *  based on https://github.com/jodyalbritton/apismartapp/blob/master/endpoint.groovy
+*  weather code from https://github.com/Dianoga/my-smartthings/blob/master/devicetypes/dianoga/weather-station.src/weather-station.groovy
+*  
+*  To Donate to this project please visit https://open-dash.com/donate/
 */
 
 import groovy.json.JsonBuilder
@@ -97,7 +100,7 @@ private def getCapabilities() {
         ["capability.soundSensor",					"Sound Sensor",					"soundSensors",						"sound"						],
         ["capability.speechRecognition",			"Speech Recognition",			"speechRecognitions",				"phraseSpoken"				],
         ["capability.stepSensor",					"Step Sensor",					"stepSensors",						"steps"						],
-        ["capability.switch",						"Switches", 					"switches",							"switch"					],
+        ["capability.switch",						"Switches", 						"switches",							"switch"					],
         ["capability.switchLevel",					"Level",						"switchLevels",						"level"						],
         ["capability.soundPressureLevel",			"Sound Pressure Level",			"soundPressureLevels",				"soundPressureLevel"		],
         ["capability.tamperAlert",					"Tamper Alert",					"tamperAlert",						"tamper"					],
@@ -673,3 +676,12 @@ private estimateLux(sunriseDate, sunsetDate, weatherIcon) {
 
 	lux
 }
+
+
+//TODO  Add location subscription subscribe(location, "alarmSystemStatus", alarmStatus) for alarmStatus function to store alarm state
+//TODO get SHM status String alarmSystemStatus = "${location?.currentState("alarmSystemStatus").stringValue}"
+//TODO create alarmStatus function for processing changes to alarm state aka SHM
+//TODO update alarm state with this sendLocationEvent(name: "alarmSystemStatus", value: status)  values = off,away,stay
+//TODO add commands and attributes defn, maybe liberate from https://github.com/ady624/webCoRE/blob/5f41cdcaf08616fb021021f7a4a4b3ccb1b7e239/smartapps/ady624/webcore.src/webcore.groovy
+//TODO add function and endpoint for sending notifications
+//TODO add endpoint for controlling a group of deviceids in JSON (for group off commands)

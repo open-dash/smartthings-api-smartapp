@@ -685,3 +685,5 @@ private estimateLux(sunriseDate, sunsetDate, weatherIcon) {
 //TODO add commands and attributes defn, maybe liberate from https://github.com/ady624/webCoRE/blob/5f41cdcaf08616fb021021f7a4a4b3ccb1b7e239/smartapps/ady624/webcore.src/webcore.groovy
 //TODO add function and endpoint for sending notifications
 //TODO add endpoint for controlling a group of deviceids in JSON (for group off commands)
+//TODO add device health endpoint and nightly scheduled function to check device history for last activity in 24 hours, create offline list, and endpoint that checks those devices for activity since last run
+//TODO add UI info for inside ST for donations and other support related info

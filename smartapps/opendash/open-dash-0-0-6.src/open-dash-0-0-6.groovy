@@ -149,6 +149,19 @@ def initialize() {
             subscribe(settings[cap[2]], cap[3], handleEvent)
         }
     }
+    subscribe(location, "alarmSystemStatus", alarmHandler)  
+}
+
+/****************************
+* Alarm Methods
+****************************/
+
+def alarmHandler(evt) {
+	if (!state.updates) state.updates = []
+    //evt.value = ["stay","away","off"]
+    def shm = eventJson(evt)
+    shm.id = "shm"
+    state.updates << shm
 }
 
 /****************************
@@ -683,7 +696,6 @@ private estimateLux(sunriseDate, sunsetDate, weatherIcon) {
 }
 
 
-//TODO  Add location subscription subscribe(location, "alarmSystemStatus", alarmStatus) for alarmStatus function to store alarm state
 //TODO get SHM status String alarmSystemStatus = "${location?.currentState("alarmSystemStatus").stringValue}"
 //TODO create alarmStatus function for processing changes to alarm state aka SHM
 //TODO update alarm state with this sendLocationEvent(name: "alarmSystemStatus", value: status)  values = off,away,stay

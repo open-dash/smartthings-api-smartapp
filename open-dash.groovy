@@ -15,7 +15,7 @@
 *  Author: Open-Dash
 *  based on https://github.com/jodyalbritton/apismartapp/blob/master/endpoint.groovy
 *  weather code from https://github.com/Dianoga/my-smartthings/blob/master/devicetypes/dianoga/weather-station.src/weather-station.groovy
-*  
+*
 *  To Donate to this project please visit https://open-dash.com/donate/
 */
 
@@ -30,24 +30,24 @@ definition(
     iconUrl: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience.png",
     iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience@2x.png",
 )
-def appVersion() {"0.0.5"}
+def appVersion() {"0.0.6"}
 
 mappings {
     // location
     path("/locations") 							{	action: [	GET: "listLocation"        														]}
-    // modes    
+    // modes
     path("/modes") 								{   action: [   GET: "listModes"        														]}
     path("/modes/:id") 							{	action: [   GET: "switchMode"        														]}
     // hub
     path("/hubs") 								{   action: [   GET: "listHubs"		       														]}
     path("/hubs/:id") 							{   action: [   GET: "getHubDetail"        														]}
-    // devices  
+    // devices
     path("/devices") 							{   action: [   GET: "listDevices"        														]}
     path("/devices/:id") 						{  	action: [   GET: "listDevices"        														]}
     path("/devices/:id/events") 				{   action: [   GET: "listDeviceEvents"        													]}
-    path("/devices/:id/commands") 				{	action: [	GET: "listDeviceCommands"        												]}    
-    path("/devices/:id/:command")				{   action: [	GET: "sendDeviceCommand"          												]}    
-    path("/devices/:id/:command/:secondary")	{   action: [   GET: "sendDeviceCommandSecondary"           									]}   
+    path("/devices/:id/commands") 				{	action: [	GET: "listDeviceCommands"        												]}
+    path("/devices/:id/:command")				{   action: [	GET: "sendDeviceCommand"          												]}
+    path("/devices/:id/:command/:secondary")	{   action: [   GET: "sendDeviceCommandSecondary"           									]}
 
     // Routines
     path("/routines") 							{   action: [   GET: "listRoutines"        														]}
@@ -60,7 +60,7 @@ mappings {
 }
 
 private def getCapabilities() {
-    [   //Capability Prefrence Reference			Display Name					Subscribed Name						Subscribe Attribute        
+    [   //Capability Prefrence Reference			Display Name					Subscribed Name						Subscribe Attribute
         ["capability.accelerationSensor",			"Accelaration Sensor",			"accelerations",					"acceleration"				],
         ["capability.actuator",						"Actuator",						"actuators",						""							],
         ["capability.alarm",						"Alarm",						"alarms",							"alarm"						],
@@ -122,7 +122,7 @@ private def getCapabilities() {
         ["capability.voltageMeasurement",			"Voltage Measurement",			"voltageMeasurements",				"voltage"					],
         ["capability.waterSensor",					"Water Sensor",					"waterSensors",						"water"						],
         ["capability.windowShade",					"Window Shade",					"windowShades",						"windowShade"				],
-    ]  
+    ]
 }
 
 preferences {
@@ -429,9 +429,9 @@ def allDevices() {
             deviceData << [ "attributes" : attributes ]
             def cmds = []
             i.supportedCommands?.each {
-            		cmds << it.name 
+            		cmds << it.name
         	}
-            deviceData << [ "commands" : cmds ] 
+            deviceData << [ "commands" : cmds ]
             allAttributes << deviceData
         }
     }
@@ -444,9 +444,9 @@ def listDeviceTypes() {
     log.debug "${allSubscribed.size()} Unique Devices" // is $uniqueDevices"
 
     allSubscribed.each {
-        it.collect{ i ->    
+        it.collect{ i ->
             if (!deviceData.contains(i?.typeName)) {
-                deviceData << i?.typeName  
+                deviceData << i?.typeName
             }
         } //.flatten().unique { it }
     }
@@ -537,7 +537,7 @@ def getWeather() {
     log.debug obs
     log.debug obs.alertString
     if (obs) {
-       return obs  
+       return obs
     }
 }
 
@@ -567,7 +567,7 @@ log.debug evt.user // null?
 
     if(x) {
         for(i in x) {
-            state.updates.remove(i) 
+            state.updates.remove(i)
         }
     }
     state.updates << js
@@ -575,17 +575,17 @@ log.debug evt.user // null?
 
 private getAllSubscribed() {
     def dev_list = []
-    capabilities.each { 
-        dev_list << settings[it[2]] 
+    capabilities.each {
+        dev_list << settings[it[2]]
     }
     return dev_list?.findAll()?.flatten().unique { it.id }
 }
 
 private item(device, s) {
-    device && s ? [device_id: device.id, 
-                   label: device.displayName, 
-                   name: s.name, value: s.value, 
-                   date: s.date, stateChange: s.stateChange, 
+    device && s ? [device_id: device.id,
+                   label: device.displayName,
+                   name: s.name, value: s.value,
+                   date: s.date, stateChange: s.stateChange,
                    eventSource: s.eventSource] : null
 }
 

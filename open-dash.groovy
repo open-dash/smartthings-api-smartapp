@@ -429,10 +429,9 @@ def allDevices() {
             deviceData << [ "attributes" : attributes ]
             def cmds = []
             i.supportedCommands?.each {
-            		cmds << ["command" : it.name ]
+            		cmds << it.name 
         	}
-            //log.debug cmds
-            deviceData << [ "commands" : cmds ] //i.supportedCommands.toString() ]  //TODO fix this to parse to an object
+            deviceData << [ "commands" : cmds ] 
             allAttributes << deviceData
         }
     }

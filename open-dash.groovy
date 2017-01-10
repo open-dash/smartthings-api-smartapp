@@ -427,7 +427,12 @@ def allDevices() {
                 attributes << [(it.toString()) : i.currentState(it.toString())?.value]
             }
             deviceData << [ "attributes" : attributes ]
-            deviceData << [ "commands" : i.supportedCommands.toString() ]
+            def cmds = []
+            i.supportedCommands?.each {
+            		cmds << ["command" : it.name ]
+        	}
+            //log.debug cmds
+            deviceData << [ "commands" : cmds ] //i.supportedCommands.toString() ]  //TODO fix this to parse to an object
             allAttributes << deviceData
         }
     }

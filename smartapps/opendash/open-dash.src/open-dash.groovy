@@ -141,9 +141,11 @@ def updated() {
 }
 
 def initialize() {
+    log.debug "Initialize called"
+	if (!state.updates) state.updates = []
+	
     for (cap in capabilities) {
         if(cap[3] != "") {
-            log.debug cap
             subscribe(settings[cap[2]], cap[3], handleEvent)
         }
     }
@@ -181,7 +183,7 @@ def listLocation() {
         hubs << getHub(it)
     }
     result << ["hubs" : hubs]
-    log.debug "Returning LOCATION: $result"
+    //log.debug "Returning LOCATION: $result"
     result
 }
 
@@ -324,12 +326,11 @@ def listDevices() {
     def id = params.id
     // if there is an id parameter, list only that device. Otherwise list all devices in location
     if(id) {
-        def device = allSubscribed?.find{it.id == id}
+        def device = allSubscribed?.find{it.id == id} 
         deviceItem(device, true)
     } else {
         def result = []
         result << allSubscribed.collect{deviceItem(it, false)}
-        log.debug "Returning DEVICES: $result"
         result[0]
     }
 }
@@ -349,23 +350,19 @@ private deviceItem(device, explodedView) {
 
         results << ["attributes" : attrsAndVals]
     }
-    log.debug "Returning DEVICE: $results"
     results
 }
 
 def listDeviceEvents() {
     def numEvents = 20
     def id = params.id
-    log.debug "In listDeviceEvents for device " + id
     def device = allSubscribed?.find{it.id == id}
 
     if (!device) {
         httpError(404, "Device not found")
     } else {
-        log.debug "Retrieving last $numEvents events"
         def events = device.events(max: numEvents)
         def result = events.collect{item(device, it)}
-        log.debug "Returnings EVENTS: $result"
         result
     }
 }
@@ -381,7 +378,6 @@ def listDeviceCommands() {
             result << ["command" : it.name, "params"  : [:]]
         }
     }
-    log.debug "Returning COMMANDS: $result"
     result
 }
 
@@ -390,8 +386,12 @@ def sendDeviceCommand() {
     def device = allSubscribed?.find{it.id == id}
     def command = params.command
     def secondary_command = params.level
-
-    device."$command"()
+	
+    if (approvedCommands.contains(command)) {
+    device."$command"()  
+    } else  {
+    	httpError(404, "Command not found")
+    }
     if(!command) {
         httpError(404, "Device not found")
     }
@@ -400,6 +400,10 @@ def sendDeviceCommand() {
     } else {
         log.debug "Executing command: $command on device: $device.displayName"
     }
+}
+
+private def getApprovedCommands() {
+	["on","off","toggle","setLevel","setColor","setHue","setSaturation","setColorTemperature","open","close","windowShade.open","windowShade.close","windowShade.presetPosition","lock","unlock","take","alarm.off","alarm.strobe","alarm.siren","alarm.both","thermostat.off","thermostat.heat","thermostat.cool","thermostat.auto","thermostat.emergencyHeat","thermostat.quickSetHeat","thermostat.quickSetCool","thermostat.setHeatingSetpoint","thermostat.setCoolingSetpoint","thermostat.setThermostatMode","fanOn","fanCirculate","fanAuto","setThermostatFanMode","play","pause","stop","nextTrack","previousTrack","mute","unmute","musicPlayer.setLevel","playText","playTextAndRestore","playTextAndResume","playTrack","playTrackAtVolume","playTrackAndRestore","playTrackAndResume","setTrack","setLocalLevel","resumeTrack","restoreTrack","speak","startActivity","getCurrentActivity","getAllActivities","push","beep","refresh","poll","low","med","high","left","right","up","down","home","presetOne","presetTwo","presetThree","presetFour","presetFive","presetSix","presetSeven","presetEight","presetCommand","startLoop","stopLoop","setLoopTime","setDirection","alert","setAdjustedColor","allOn","allOff"]
 }
 
 def sendDeviceCommandSecondary() {
@@ -426,7 +430,6 @@ def updates() {
 
 def allDevices() {
     def allAttributes = []
-    log.debug "${allSubscribed.size()} Unique Devices"
 
     allSubscribed.each {
         it.collect{ i ->
@@ -442,7 +445,6 @@ def allDevices() {
             i.supportedCommands?.each {
             		cmds << ["command" : it.name ]
         	}
-            //log.debug cmds
             deviceData << [ "commands" : cmds ] //i.supportedCommands.toString() ]  //TODO fix this to parse to an object
             allAttributes << deviceData
         }
@@ -452,26 +454,20 @@ def allDevices() {
 
 def listDeviceTypes() {
     def deviceData = []
-    //def uniqueDevices = settings.collect { k, devices -> devices.findAll{k != "capability"} }.flatten().unique { it.id }
-    log.debug "${allSubscribed.size()} Unique Devices" // is $uniqueDevices"
-
-    allSubscribed.each {
+    allSubscribed?.each {
         it.collect{ i ->    
             if (!deviceData.contains(i?.typeName)) {
                 deviceData << i?.typeName  
             }
-        } //.flatten().unique { it }
+        } 
     }
     render contentType: "text/json", data: new JsonBuilder(deviceData).toPrettyString()
 }
 
-/* General API Functions */
-
-
 /* WebHook API Call on Subscribed Change */
 private logField(evt, Closure c) {
     //log.debug "The souce of this event is ${evt.source} and it was ${evt.id}"
-
+	//TODO Use ASYNCHTTP Model instead
     //httpPostJson(uri: "#####SEND EVENTS TO YOUR ENDPOINT######",   body:[source: "smart_things", device: evt.deviceId, eventType: evt.name, value: evt.value, event_date: evt.isoDate, units: evt.unit, event_source: evt.source, state_changed: evt.isStateChange()]) {
     //    log.debug evt.name+" Event data successfully posted"
     //}
@@ -555,17 +551,17 @@ def getWeather() {
 def handleEvent(evt) {
     //Find what we know about evt
     /*
-log.debug evt
-log.debug evt.date // Sun Mar 01 22:43:37 UTC 2015
-log.debug evt.name // motion (capability type)
-log.debug evt.displayName // name of the device in ST "Office aeon multi"
-log.debug evt.value // the value of the capability type, open close inactive, active, etc.
-log.debug evt.descriptionText // ex. Master Bath 1 switch is on
-log.debug evt.description // zigbee or zwave raw data
-log.debug evt.unit // could F or others
-log.debug evt.type // null?
-log.debug evt.user // null?
-*/
+    log.debug evt
+    log.debug evt.date // Sun Mar 01 22:43:37 UTC 2015
+    log.debug evt.name // motion (capability type)
+    log.debug evt.displayName // name of the device in ST "Office aeon multi"
+    log.debug evt.value // the value of the capability type, open close inactive, active, etc.
+    log.debug evt.descriptionText // ex. Master Bath 1 switch is on
+    log.debug evt.description // zigbee or zwave raw data
+    log.debug evt.unit // could F or others
+    log.debug evt.type // null?
+    log.debug evt.user // null?
+    */
     //log.debug evt.jsonValue
 
     //send to webhook api
@@ -604,7 +600,6 @@ private getRoutine(routine) {
     ["id", "label"].each {
         result << [(it) : routine."$it"]
     }
-    log.debug "Returning ROUTINE: $result"
     result
 }
 
@@ -619,7 +614,6 @@ private getMode(mode, explodedView = false) {
             result << [(it) : mode."$it"]
         }
     }
-    log.debug "Returning MODE: $result"
     result
 }
 
@@ -630,7 +624,6 @@ private eventJson(evt) {
     update.value = evt.value
     update.name = evt.displayName
     update.date = evt.isoDate
-    //log.debug update
     return update
 }
 
@@ -691,10 +684,8 @@ private estimateLux(sunriseDate, sunsetDate, weatherIcon) {
 	lux
 }
 
-
 //TODO get SHM status String alarmSystemStatus = "${location?.currentState("alarmSystemStatus").stringValue}"
 //TODO create alarmStatus function for processing changes to alarm state aka SHM
 //TODO update alarm state with this sendLocationEvent(name: "alarmSystemStatus", value: status)  values = off,away,stay
-//TODO add commands and attributes defn, maybe liberate from https://github.com/ady624/webCoRE/blob/5f41cdcaf08616fb021021f7a4a4b3ccb1b7e239/smartapps/ady624/webcore.src/webcore.groovy
 //TODO add function and endpoint for sending notifications
 //TODO add endpoint for controlling a group of deviceids in JSON (for group off commands)

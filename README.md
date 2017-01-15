@@ -24,7 +24,7 @@ Endpoints
 * [/devices/:id](#devices/:id)
 * [/devices/:id/events](#devices/:id/events)
 * [/devices/:id/commands](#devices/:id/commands)
-* [/devices/:id/:command](#devices/:id/command)
+* [/devices/:id/:command](#devices/:id/:command)
 * [/devices/:id/:command/:secondary](#devices/:id/:command/:secondary)
 * [/devices/commands](#devices/commands)
 * [/routines](#routines)

@@ -10,7 +10,8 @@ where the `[token]` is the completed oauth2 authentication flow to the Smartapp.
 NOTE:  Almost all endpoints right now only respond to a GET, this will be fixed later.
 
 ## Endpoints
-/locations
+============
+[/locations](#locations)
 
 /contacts
 
@@ -55,8 +56,9 @@ NOTE:  Almost all endpoints right now only respond to a GET, this will be fixed 
 /weather
 
 
-
-**/locations**
+<a name="locations"/>
+/locations
+=========
 
 Get all locations attached to to authenticated account
 

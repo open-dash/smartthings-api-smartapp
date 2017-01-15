@@ -10,12 +10,10 @@ where the `[token]` is the completed oauth2 authentication flow to the Smartapp.
 NOTE:  Almost all endpoints right now only respond to a GET, this will be fixed later.
 
 ## Endpoints
-============
+===========
 [/locations](#locations)
-
-/contacts
-
-/modes
+[/contacts](#contacts)
+[/modes](#modes)
 
 /modes/:id
 
@@ -92,7 +90,7 @@ example:
     ]
 }
 ```
-
+<a name="contacts"/>
 **/contacts**
 
 Get all subscribed to contacts or phones in smartapp

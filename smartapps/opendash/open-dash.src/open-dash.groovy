@@ -53,7 +53,7 @@ mappings {
     path("/devices/:id/commands") 				{	action: [	GET: "listDeviceCommands"        												]}    
     path("/devices/:id/:command")				{   action: [	GET: "sendDeviceCommand"          												]}    
     path("/devices/:id/:command/:secondary")	{   action: [   GET: "sendDeviceCommandSecondary"           									]}    
-    path("/devices/commands")					{   action: [	PUT: "sendDevicesCommands"          											]}     
+    path("/devices/commands")					{   action: [	POST: "sendDevicesCommands"         											]}     
     // routines
     path("/routines") 							{   action: [   GET: "listRoutines"        														]}
     path("/routines/:id") 						{   action: [   GET: "listRoutines",            	POST: "executeRoutine"        				]}

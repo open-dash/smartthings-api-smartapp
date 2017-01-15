@@ -9,48 +9,30 @@ where the `[token]` is the completed oauth2 authentication flow to the Smartapp.
 
 NOTE:  Almost all endpoints right now only respond to a GET, this will be fixed later.
 
-## Endpoints
+Endpoints
 =========
 * [/locations](#locations)
 * [/contacts](#contacts)
 * [/modes](#modes)
-* /modes/:id
-
-/hubs
-
-/hubs/:id
-
-/shm
-
-/shm/:mode
-
-/notification  (PUT)
-
-/devices
-
-/devices/:id
-
-/devices/:id/events
-
-/devices/:id/commands
-
-/devices/:id/command
-
-/devices/:id/command/:secondary
-
-/devices/commands
-
-/routines
-
-/routines/:id  (GET/POST)
-
-/updates
-
-/allDevices
-
-/devicetypes
-
-/weather
+* [/modes/:id](#modes/:id)
+* [/hubs](#hubs)
+* [/hubs/:id](#hubs/:id)
+* [/shm](#shm)
+* [/shm/:mode](#shm/:mode)
+* [/notification](#notification)  (PUT)
+* [/devices](#devices)
+* [/devices/:id](#devices/:id)
+* [/devices/:id/events](#devices/:id/events)
+* [/devices/:id/commands](#devices/:id/commands)
+* [/devices/:id/command](#devices/:id/command)
+* [/devices/:id/command/:secondary](#devices/:id/command/:secondary)
+* [/devices/commands](#devices/commands)
+* [/routines](#routines)
+* [/routines/:id](#routines/:id)  (GET/POST)
+* [/updates](#updates)
+* [/allDevices](#allDevices)
+* [/devicetypes](#devicetypes)
+* [/weather](#weather)
 
 
 <a name="locations"/>
@@ -91,6 +73,7 @@ example:
 ```
 <a name="contacts"/>
 **/contacts**
+=========
 
 Get all subscribed to contacts or phones in smartapp
 
@@ -147,7 +130,9 @@ example:
     ]
 }
 ```
+<a name="modes"/>
 **/modes**
+=========
 
 Get all modes attached to this account
 
@@ -177,7 +162,9 @@ example:
 }
 ```
 
+<a name="modes/:id"/>
 **/modes/:id**
+=========
 
 Set the mode via its UUID from /modes
 
@@ -194,7 +181,9 @@ example:
 }
 ```
 
+<a name="hubs"/>
 **/hubs**
+=========
 
 Get all hubs attached to this account
 
@@ -216,8 +205,9 @@ example:
 }
 ```
 
-
+<a name="hubs/:id"/>
 **/hubs/:id**
+=========
 
 Get hub information based on id
 
@@ -242,7 +232,10 @@ example:
     ]
 }
 ```
+
+<a name="shm"/>
 **/shm**
+=========
 
 GET current state of Smart Home Monitor (SHM)
 
@@ -258,7 +251,9 @@ example:
 }
 ```
 
+<a name="shm/:mode"/>
 **/shm/:mode**
+=========
 
 GET to change current state of Smart Home Monitor (SHM)
 
@@ -276,7 +271,9 @@ example:
 }
 ```
 
+<a name="notification"/>
 **/notification**
+=========
 
 PUT Sends notification to a contact if address book is enabled
 
@@ -297,9 +294,9 @@ example:
 }
 ```
 
-
-returns json
+<a name="routines"/>
 **/routines**
+=========
 
 Get all routines associated with Account
 
@@ -324,7 +321,9 @@ example:
 }
 ```
 
+<a name="routines/:id"/>
 **/routines/:id**
+=========
 
 GET
 Get routine information
@@ -366,7 +365,9 @@ example:
 }
 ```
 
+<a name="devices"/>
 **/devices**
+=========
 
 Get list of devices
 
@@ -390,7 +391,9 @@ example:
 }
 ```
 
+<a name="devices/:id"/>
 **/devices/:id**
+=========
 
 Get device info
 
@@ -425,7 +428,9 @@ example:
 }
 ```
 
+<a name="devices/:id/commands"/>
 **/devices/:id/commands**
+=========
 
 Get device commands
 
@@ -458,7 +463,9 @@ example:
 }
 ```
 
+<a name="devices/:id/:command"/>
 **/devices/:id/:command**
+=========
 
 Sends command to device id
 
@@ -483,7 +490,9 @@ example:
 }
 ```
 
+<a name="devices/:id/:command/:secondary"/>
 **/devices/:id/:command/:secondary**
+=========
 
 Sends Secondary command to device id
 
@@ -508,7 +517,9 @@ example:
 }
 ```
 
+<a name="devices/:id/events"/>
 **/devices/:id/events**
+=========
 
 Get Device Events
 
@@ -547,7 +558,9 @@ example:
 }
 ```
 
+<a name="devices/commands"/>
 **/devices/commands**
+=========
 
 POST a list of device ids, commands and option value for batch Control 
 
@@ -612,7 +625,9 @@ example:
 }
 ```
 
+<a name="updates"/>
 **/updates**
+=========
 
 Get last update for each device that has been queued up by the API
 
@@ -638,7 +653,9 @@ example:
 }
 ```
 
+<a name="allDevices"/>
 **/allDevices**
+=========
 
 Get all devices subscribed to, with full details
 
@@ -687,7 +704,9 @@ example:
 ]
 ```
 
+<a name="devicetypes"/>
 **/devicetypes**
+=========
 
 Get devicetype names for all subscribed devices
 
@@ -725,7 +744,10 @@ example:
     ]
 }
 ```
+
+<a name="weather"/>
 **/weather**
+=========
 
 Get current conditions for subscribed location
 

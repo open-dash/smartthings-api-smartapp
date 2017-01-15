@@ -12,6 +12,8 @@ NOTE:  Almost all endpoints right now only respond to a GET, this will be fixed 
 ## Endpoints
 /locations
 
+/contacts
+
 /modes
 
 /modes/:id
@@ -24,7 +26,7 @@ NOTE:  Almost all endpoints right now only respond to a GET, this will be fixed 
 
 /shm/:mode
 
-/notification  (POST)
+/notification  (PUT)
 
 /devices
 
@@ -37,6 +39,8 @@ NOTE:  Almost all endpoints right now only respond to a GET, this will be fixed 
 /devices/:id/command
 
 /devices/:id/command/:secondary
+
+/devices/commands
 
 /routines
 
@@ -87,6 +91,63 @@ example:
 }
 ```
 
+**/contacts**
+
+Get all subscribed to contacts or phones in smartapp
+
+return json
+
+example:
+
+```
+{
+    "status": "ok",
+    "data": [
+        [
+            {
+                "deliveryType": "PUSH",
+                "id": "[UUID]",
+                "label": "Patrick Stuart - PUSH",
+                "name": "Push",
+                "contact": {
+                    "hasSMS": true,
+                    "id": "[UUID]",
+                    "title": "Patrick Stuart",
+                    "pushProfile": "Patrick Stuart - PUSH",
+                    "middleInitial": null,
+                    "firstName": "Patrick",
+                    "image": null,
+                    "initials": "PS",
+                    "hasPush": true,
+                    "lastName": "Stuart",
+                    "fullName": "Patrick Stuart",
+                    "hasEmail": true
+                }
+            },
+            {
+                "deliveryType": "SMS",
+                "id": "[UUID]",
+                "label": "Patrick Stuart - SMS",
+                "name": "cell",
+                "contact": {
+                    "hasSMS": true,
+                    "id": "[UUID]e",
+                    "title": "Patrick Stuart",
+                    "pushProfile": "Patrick Stuart - PUSH",
+                    "middleInitial": null,
+                    "firstName": "Patrick",
+                    "image": null,
+                    "initials": "PS",
+                    "hasPush": true,
+                    "lastName": "Stuart",
+                    "fullName": "Patrick Stuart",
+                    "hasEmail": true
+                }
+            }
+        ]
+    ]
+}
+```
 **/modes**
 
 Get all modes attached to this account
@@ -216,6 +277,29 @@ example:
 }
 ```
 
+**/notification**
+
+PUT Sends notification to a contact if address book is enabled
+
+Send as json: 
+
+id is from endpoint contacts
+method is only valid if address book is not enabled
+
+returns json
+
+example:
+
+```
+{ 
+    id: "[uuid]",
+    message: "This is a test",
+    method: "push"
+}
+```
+
+
+returns json
 **/routines**
 
 Get all routines associated with Account
@@ -461,6 +545,71 @@ example:
 		"eventSource": "DEVICE"
 	}
 	]
+}
+```
+
+**/devices/commands**
+
+POST a list of device ids, commands and option value for batch Control 
+
+```
+{   
+	group: [
+    { id:"[UUID]",command:on },
+    { id:"[UUID]",command:off },
+    {id:"[UUID]",command:setLevel,value:100}
+]}
+```
+
+returns json
+
+example:
+
+```
+{
+    "status": "ok",
+    "data": [
+        [
+            {
+                "id": "[UUID]",
+                "status": "success",
+                "command": "on",
+                "state": [
+                    {
+                        "id": "[UUID]",
+                        "name": "CentraLite Switch",
+                        "displayName": "Patrick Office CentraLite Switch",
+                        "attributes": {
+                            "switch": "on",
+                            "power": 0,
+                            "checkInterval": 720
+                        }
+                    }
+                ]
+            },
+            {
+                "id": "[UUID]",
+                "status": "not found"
+            },
+            {
+                "id": "[UUID]",
+                "status": "success",
+                "command": "setLevel",
+                "value": 100,
+                "state": [
+                    {
+                        "id": "[UUID]",
+                        "name": "ps_Control4_Dimmer_ZigbeeHA",
+                        "displayName": "Patrick Office Dimmer",
+                        "attributes": {
+                            "switch": "on",
+                            "level": 100
+                        }
+                    }
+                ]
+            }
+        ]
+    ]
 }
 ```
 

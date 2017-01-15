@@ -45,7 +45,7 @@ mappings {
     // shm
     path("/shm") 								{   action: [   GET: "getSHMStatus"        														]}
     path("/shm/:mode") 							{   action: [   GET: "setSHMMode"        														]}
-    path("/notification") 						{   action: [   PUT: "sendNotification"     													]}
+    path("/notification") 						{   action: [   POST: "sendNotification"     													]}
     // devices  
     path("/devices") 							{   action: [   GET: "listDevices"        														]}
     path("/devices/:id") 						{  	action: [   GET: "listDevices"        														]}

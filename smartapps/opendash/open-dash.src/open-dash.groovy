@@ -40,20 +40,25 @@ mappings {
     // hub
     path("/hubs") 								{   action: [   GET: "listHubs"		       														]}
     path("/hubs/:id") 							{   action: [   GET: "getHubDetail"        														]}
+    // shm
+    path("/shm") 								{   action: [   GET: "getSHMStatus"        														]}
+    path("/shm/:mode") 							{   action: [   GET: "setSHMMode"        														]}
+    path("/notification") 						{   action: [   POST: "sendNotification"     													]}
     // devices  
     path("/devices") 							{   action: [   GET: "listDevices"        														]}
     path("/devices/:id") 						{  	action: [   GET: "listDevices"        														]}
     path("/devices/:id/events") 				{   action: [   GET: "listDeviceEvents"        													]}
     path("/devices/:id/commands") 				{	action: [	GET: "listDeviceCommands"        												]}    
     path("/devices/:id/:command")				{   action: [	GET: "sendDeviceCommand"          												]}    
-    path("/devices/:id/:command/:secondary")	{   action: [   GET: "sendDeviceCommandSecondary"           									]}   
-
-    // Routines
+    path("/devices/:id/:command/:secondary")	{   action: [   GET: "sendDeviceCommandSecondary"           									]}    
+    path("/devices/:command")					{   action: [	POST: "sendDevicesCommand"          											]}     
+    // routines
     path("/routines") 							{   action: [   GET: "listRoutines"        														]}
     path("/routines/:id") 						{   action: [   GET: "listRoutines",            	POST: "executeRoutine"        				]}
+    // generic
     path("/updates") 							{   action: [   GET: "updates"        															]}
     path("/allDevices") 						{   action: [   GET: "allDevices"        														]}
-    path("/devicetypes")						{	action: [ 	GET: "listDeviceTypes" 															]}
+    path("/deviceTypes")						{	action: [ 	GET: "listDeviceTypes" 															]}
     path("/weather")							{	action: [ 	GET: "getWeather" 																]}
 }
 
@@ -123,6 +128,10 @@ private def getCapabilities() {
     ]  
 }
 
+private def getApprovedCommands() {
+    ["on","off","toggle","setLevel","setColor","setHue","setSaturation","setColorTemperature","open","close","windowShade.open","windowShade.close","windowShade.presetPosition","lock","unlock","take","alarm.off","alarm.strobe","alarm.siren","alarm.both","thermostat.off","thermostat.heat","thermostat.cool","thermostat.auto","thermostat.emergencyHeat","thermostat.quickSetHeat","thermostat.quickSetCool","thermostat.setHeatingSetpoint","thermostat.setCoolingSetpoint","thermostat.setThermostatMode","fanOn","fanCirculate","fanAuto","setThermostatFanMode","play","pause","stop","nextTrack","previousTrack","mute","unmute","musicPlayer.setLevel","playText","playTextAndRestore","playTextAndResume","playTrack","playTrackAtVolume","playTrackAndRestore","playTrackAndResume","setTrack","setLocalLevel","resumeTrack","restoreTrack","speak","startActivity","getCurrentActivity","getAllActivities","push","beep","refresh","poll","low","med","high","left","right","up","down","home","presetOne","presetTwo","presetThree","presetFour","presetFive","presetSix","presetSeven","presetEight","presetCommand","startLoop","stopLoop","setLoopTime","setDirection","alert","setAdjustedColor","allOn","allOff"]
+}
+
 preferences {
     section("Allow Endpoint to Control These Things by Their Capabilities (You only need to choose one capability to get access to full device, however, selecting all capabilities will not create duplicate devices...") {
         for (cap in capabilities) {
@@ -142,31 +151,78 @@ def updated() {
 
 def initialize() {
     log.debug "Initialize called"
-	if (!state.updates) state.updates = []
-	
+    if (!state.updates) state.updates = []
+
     for (cap in capabilities) {
         if(cap[3] != "") {
             subscribe(settings[cap[2]], cap[3], handleEvent)
         }
     }
     subscribe(location, "alarmSystemStatus", alarmHandler)  
+    //TODO Remove before publication Testing Use Only
+    if (!state.accessToken) {
+        createAccessToken()
+    }
+    def url = "Testing URL is " + getApiServerUrl() + "/api/smartapps/installations/${app.id}?access_token=${state.accessToken}"
+    log.debug url
+    //TODO End removal area
 }
 
 /****************************
 * Alarm Methods
 ****************************/
 
+/**
+* Handles the subscribed event from a change in SHM status and stores that in updates state variable
+*
+* @param evt from location object.
+*/
 def alarmHandler(evt) {
-	if (!state.updates) state.updates = []
+    if (!state.updates) state.updates = []
     //evt.value = ["stay","away","off"]
     def shm = eventJson(evt)
     shm.id = "shm"
     state.updates << shm
 }
 
+/**
+* Gets the current state of the SHM object
+*
+* @return renders json
+*/
+def getSHMStatus() {
+    def alarmSystemStatus = "${location?.currentState("alarmSystemStatus").stringValue}"
+    log.debug "SHM Status is " + alarmSystemStatus
+        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[alarmSystemStatus]]).toPrettyString()
+}
+
+/**
+* Sets the state of the SHM object
+*
+* @return renders json
+*/
+def setSHMMode() {
+    def validmodes = ["off", "away", "stay"]
+    def status = params.mode
+    def mode = validmodes?.find{it == status}
+    if(mode) {
+        log.debug "Setting SHM to $status in location: $location.name"
+        sendLocationEvent(name: "alarmSystemStatus", value: status)
+        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[status]]).toPrettyString()
+    } else {
+        httpError(404, "mode not found")
+    }
+}
+
 /****************************
 * Location Methods
 ****************************/
+
+/**
+* Gets the location object
+*
+* @return renders json
+*/
 def listLocation() {
     def result = [:]
     ["contactBookEnabled", "name", "temperatureScale", "zipCode"].each {
@@ -184,50 +240,34 @@ def listLocation() {
     }
     result << ["hubs" : hubs]
     //log.debug "Returning LOCATION: $result"
-    result
+    //result
+    render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[result]]).toPrettyString()
 }
 
 /****************************
 * Hubs Methods
 ****************************/
+
+/**
+* Gets the hubs object
+*
+* @return renders json
+*/
 def listHubs() {
-    def id = params.id
-    // if there is an id parameter, list only that hub. Otherwise list all hubs in location
-    if(id) {
-        def hub = location.hubs?.find{it.id == id}
-        if(hub) {
-            getHub(hub, true)
-        } else {
-            httpError(404, "hub not found")
-        }
-    } else {
-        def result = []
-        location.hubs?.each {
-            result << getHub(it)
-        }
-        log.debug "Returning HUBS: $result"
-        result
+    def result = []
+    location.hubs?.each {
+        result << getHub(it)
     }
+    log.debug "Returning HUBS: $result"
+    render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[result]]).toPrettyString()    
 }
 
-def getHub(hub, explodedView = false) {
-    def result = [:]
-    //put the id and name into the result
-    ["id", "name"].each {
-        result << [(it) : hub."$it"]
-    }
-
-    // if we want detailed information about this hub
-    if(explodedView) {
-        ["firmwareVersionString", "localIP", "localSrvPortTCP", "zigbeeEui", "zigbeeId"].each {
-            result << [(it) : hub."$it"]
-        }
-        result << ["type" : hub.type as String]
-    }
-    log.debug "Returning HUB: $result"
-    result
-}
-
+/**
+* Gets the hub detail
+*
+* @param params.id is the hub id
+* @return renders json
+*/
 def getHubDetail() {
     def id = params.id
     log.debug "getting hub detail for id: " + id
@@ -238,19 +278,39 @@ def getHubDetail() {
         ["id", "name"].each {
             result << [(it) : hub."$it"]
         }
-        ["firmwareVersionString", "localIP", "localSrvPortTCP", "zigbeeEui", "zigbeeId"].each {
+        ["firmwareVersionString", "localIP", "localSrvPortTCP", "zigbeeEui", "zigbeeId", "type"].each {
             result << [(it) : hub."$it"]
         }
         result << ["type" : hub.type as String]
 
         log.debug "Returning HUB: $result"
-        result
+        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[result]]).toPrettyString()
     }
+}
+
+/**
+* Sends Notification
+*
+* @param notification details
+* @return renders json
+*/
+def sendNotification() {
+    //TODO Implement Notification Endpoint
+    def id = request.JSON?.id
+    log.debug "In Notifications " + id
+    render contentType: "text/json", data: new JsonBuilder([status: "ok", data:["not implemented"]]).toPrettyString()
 }
 
 /****************************
 * Modes API Commands
 ****************************/
+
+/**
+* Gets Modes for location, if params.id is provided, get details for that mode
+*
+* @param params.id is the mode id
+* @return renders json
+*/
 def listModes() {
     def id = params.id
     // if there is an id parameter, list only that mode. Otherwise list all modes in location
@@ -267,17 +327,23 @@ def listModes() {
             result << getMode(it)
         }
         log.debug "Returning MODES: $result"
-        result
+        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[result]]).toPrettyString()
     }
 }
 
+/**
+* Sets Mode for location
+*
+* @param params.id is the mode id
+* @return renders json
+*/
 def switchMode() {
     def id = params.id
     def mode = location.modes?.find{it.id == id}
     if(mode) {
         log.debug "Setting mode to $mode.name in location: $location.name"
         location.setMode(mode.name)
-        render contentType: "text/html", status: 201, data: "No Content"
+        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[mode.name]]).toPrettyString()
     } else {
         httpError(404, "mode not found")
     }
@@ -286,6 +352,13 @@ def switchMode() {
 /****************************
 * Routine API Commands
 ****************************/
+
+/**
+* Gets Routines for location, if params.id is provided, get details for that Routine
+*
+* @param params.id is the routine id
+* @return renders json
+*/
 def listRoutines() {
     def id = params.id
     def results = []
@@ -296,17 +369,23 @@ def listRoutines() {
         if(!routine) {
             httpError(404, "Routine not found")
         } else {
-            getRoutine(routine)
+       	render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[getRoutine(routine)]]).toPrettyString()            
         }
     } else {
         location.helloHome?.getPhrases().each { routine ->
             results << getRoutine(routine)
         }
         log.debug "Returning ROUTINES: $results"
-        results
+        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[results]]).toPrettyString()
     }
 }
 
+/**
+* Executes Routine for location
+*
+* @param params.id is the routine id
+* @return renders json
+*/
 def executeRoutine() {
     def id = params.id
     def routine = location.helloHome?.getPhrases().find{it.id == id}
@@ -315,61 +394,63 @@ def executeRoutine() {
     } else {
         log.debug "Executing Routine: $routine.label in location: $location.name"
         location.helloHome?.execute(routine.label)
-        render contentType: "text/html", status: 204, data: "No Content"
+        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[routine]]).toPrettyString()
     }
 }
 
 /****************************
 * Device API Commands
 ****************************/
+
+/**
+* Gets Subscribed Devices for location, if params.id is provided, get details for that device
+*
+* @param params.id is the device id
+* @return renders json
+*/
 def listDevices() {
     def id = params.id
     // if there is an id parameter, list only that device. Otherwise list all devices in location
     if(id) {
-        def device = allSubscribed?.find{it.id == id} 
-        deviceItem(device, true)
+        def device = findDevice(id)
+        log.debug device      
+        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[deviceItem(device, true)]]).toPrettyString()
     } else {
         def result = []
-        result << allSubscribed.collect{deviceItem(it, false)}
-        result[0]
+        result << allSubscribed.collect{deviceItem(it, false)}                
+        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[result[0]]]).toPrettyString()
     }
 }
 
-private deviceItem(device, explodedView) {
-    if (!device) return null
-    def results = [:]
-    ["id", "name", "displayName"].each {
-        results << [(it) : device."$it"]
-    }
-
-    if(explodedView) {
-        def attrsAndVals = [:]
-        device.supportedAttributes?.each {
-            attrsAndVals << [(it.name) : device.currentValue(it.name)]
-        }
-
-        results << ["attributes" : attrsAndVals]
-    }
-    results
-}
-
+/**
+* Gets Subscribed Device Events for location
+*
+* @param params.id is the device id
+* @return renders json
+*/
 def listDeviceEvents() {
     def numEvents = 20
     def id = params.id
-    def device = allSubscribed?.find{it.id == id}
+    def device = findDevice(id)
 
     if (!device) {
         httpError(404, "Device not found")
     } else {
         def events = device.events(max: numEvents)
         def result = events.collect{item(device, it)}
-        result
+        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[result]]).toPrettyString()
     }
 }
 
+/**
+* Gets Subscribed Device Commands for location
+*
+* @param params.id is the device id
+* @return renders json
+*/
 def listDeviceCommands() {
     def id = params.id
-    def device = allSubscribed?.find{it.id == id}
+    def device = findDevice(id) 
     def result = []
     if(!device) {
         httpError(404, "Device not found")
@@ -378,19 +459,40 @@ def listDeviceCommands() {
             result << ["command" : it.name, "params"  : [:]]
         }
     }
-    result
+    render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[result]]).toPrettyString()
 }
 
+/**
+* Executes Command for list of Device Ids for location
+*
+* @param params.ids is a list of the device ids
+* @return renders json
+*/
+def sendDevicesCommands() {
+    //TODO get list of device id's from POST
+    //LOOP through device ids
+    //if (approvedCommands.contains(command)) {
+    //device."$command"()  
+    //}
+    //END LOOP
+    //RETURN list of ids and succsess / fail for each
+}
+
+/**
+* Executes Supported Command for a Device
+*
+* @param params.ids is the device id, params.command is the command to send
+* @return renders json
+*/
 def sendDeviceCommand() {
     def id = params.id
-    def device = allSubscribed?.find{it.id == id}
+    def device = findDevice(id) 
     def command = params.command
     def secondary_command = params.level
-	
     if (approvedCommands.contains(command)) {
-    device."$command"()  
+        device."$command"()  
     } else  {
-    	httpError(404, "Command not found")
+        httpError(404, "Command not found")
     }
     if(!command) {
         httpError(404, "Device not found")
@@ -399,16 +501,19 @@ def sendDeviceCommand() {
         httpError(404, "Device not found")
     } else {
         log.debug "Executing command: $command on device: $device.displayName"
+        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[deviceItem(device, true)]]).toPrettyString()
     }
 }
 
-private def getApprovedCommands() {
-	["on","off","toggle","setLevel","setColor","setHue","setSaturation","setColorTemperature","open","close","windowShade.open","windowShade.close","windowShade.presetPosition","lock","unlock","take","alarm.off","alarm.strobe","alarm.siren","alarm.both","thermostat.off","thermostat.heat","thermostat.cool","thermostat.auto","thermostat.emergencyHeat","thermostat.quickSetHeat","thermostat.quickSetCool","thermostat.setHeatingSetpoint","thermostat.setCoolingSetpoint","thermostat.setThermostatMode","fanOn","fanCirculate","fanAuto","setThermostatFanMode","play","pause","stop","nextTrack","previousTrack","mute","unmute","musicPlayer.setLevel","playText","playTextAndRestore","playTextAndResume","playTrack","playTrackAtVolume","playTrackAndRestore","playTrackAndResume","setTrack","setLocalLevel","resumeTrack","restoreTrack","speak","startActivity","getCurrentActivity","getAllActivities","push","beep","refresh","poll","low","med","high","left","right","up","down","home","presetOne","presetTwo","presetThree","presetFour","presetFive","presetSix","presetSeven","presetEight","presetCommand","startLoop","stopLoop","setLoopTime","setDirection","alert","setAdjustedColor","allOn","allOff"]
-}
-
+/**
+* Executes Supported Command with secondary parameter for a Device
+*
+* @param params.ids is the device id, params.command is the command to send, params.command is the value for secondary command
+* @return renders json
+*/
 def sendDeviceCommandSecondary() {
     def id = params.id
-    def device = allSubscribed?.find{it.id == id}
+    def device = findDevice(id) 
     def command = params.command
     def secondary = params.secondary.toInteger()
 
@@ -420,14 +525,25 @@ def sendDeviceCommandSecondary() {
         httpError(404, "Device not found")
     } else {
         log.debug "Executing with secondary command: $command $secondary on device: $device.displayName"
+        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[deviceItem(device, true)]]).toPrettyString()
     }
 }
 
+/**
+* Get the updates from state variable and returns them
+*
+* @return renders json
+*/
 def updates() {
     //render out json of all updates since last html loaded
-    render contentType: "text/json", data: new JsonBuilder(state.updates).toPrettyString()
+        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[state.updates]]).toPrettyString()
 }
 
+/**
+* Builds a map of all unique devices
+*
+* @return renders json
+*/
 def allDevices() {
     def allAttributes = []
 
@@ -443,8 +559,8 @@ def allDevices() {
             deviceData << [ "attributes" : attributes ]
             def cmds = []
             i.supportedCommands?.each {
-            		cmds << ["command" : it.name ]
-        	}
+                cmds << ["command" : it.name ]
+            }
             deviceData << [ "commands" : cmds ] //i.supportedCommands.toString() ]  //TODO fix this to parse to an object
             allAttributes << deviceData
         }
@@ -452,6 +568,11 @@ def allDevices() {
     render contentType: "text/json", data: new JsonBuilder(allAttributes).toPrettyString()
 }
 
+/**
+* Builds a map of all unique devicesTypes
+*
+* @return renders json
+*/
 def listDeviceTypes() {
     def deviceData = []
     allSubscribed?.each {
@@ -461,18 +582,14 @@ def listDeviceTypes() {
             }
         } 
     }
-    render contentType: "text/json", data: new JsonBuilder(deviceData).toPrettyString()
+    render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[deviceData]]).toPrettyString()
 }
 
-/* WebHook API Call on Subscribed Change */
-private logField(evt, Closure c) {
-    //log.debug "The souce of this event is ${evt.source} and it was ${evt.id}"
-	//TODO Use ASYNCHTTP Model instead
-    //httpPostJson(uri: "#####SEND EVENTS TO YOUR ENDPOINT######",   body:[source: "smart_things", device: evt.deviceId, eventType: evt.name, value: evt.value, event_date: evt.isoDate, units: evt.unit, event_source: evt.source, state_changed: evt.isStateChange()]) {
-    //    log.debug evt.name+" Event data successfully posted"
-    //}
-}
-
+/**
+* Builds a map of useful weather data
+*
+* @return renders json
+*/
 def getWeather() {
     // Current conditions
     def obs = get("conditions")?.current_observation
@@ -539,30 +656,46 @@ def getWeather() {
             obs << [ alertString : noneString ]
         }
     }
-
     log.debug obs
-    log.debug obs.alertString
     if (obs) {
-       return obs  
+        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[obs]]).toPrettyString()
     }
 }
 
-/* Common Functions */
-def handleEvent(evt) {
-    //Find what we know about evt
-    /*
-    log.debug evt
-    log.debug evt.date // Sun Mar 01 22:43:37 UTC 2015
-    log.debug evt.name // motion (capability type)
-    log.debug evt.displayName // name of the device in ST "Office aeon multi"
-    log.debug evt.value // the value of the capability type, open close inactive, active, etc.
-    log.debug evt.descriptionText // ex. Master Bath 1 switch is on
-    log.debug evt.description // zigbee or zwave raw data
-    log.debug evt.unit // could F or others
-    log.debug evt.type // null?
-    log.debug evt.user // null?
-    */
-    //log.debug evt.jsonValue
+/****************************
+* Private Methods
+****************************/
+
+/**
+* Builds a map of hub details
+*
+* @param hub id (optional), explodedView to show details
+* @return a map of hub
+*/
+private getHub(hub, explodedView = false) {
+    def result = [:]
+    //put the id and name into the result
+    ["id", "name"].each {
+        result << [(it) : hub."$it"]
+    }
+
+    // if we want detailed information about this hub
+    if(explodedView) {
+        ["firmwareVersionString", "localIP", "localSrvPortTCP", "zigbeeEui", "zigbeeId"].each {
+            result << [(it) : hub."$it"]
+        }
+        result << ["type" : hub.type as String]
+    }
+    log.debug "Returning HUB: $result"
+    result
+}
+
+/**
+* Handles the subscribed event and updates state variable
+*
+* @param evt is the event object
+*/
+private handleEvent(evt) {
 
     //send to webhook api
     logField(evt) { it.toString() }
@@ -579,6 +712,24 @@ def handleEvent(evt) {
     state.updates << js
 }
 
+/**
+* WebHook API Call on Subscribed Change 
+*
+* @param evt is the event object, c is a Closure
+*/
+private logField(evt, Closure c) {
+    //log.debug "The souce of this event is ${evt.source} and it was ${evt.id}"
+    //TODO Use ASYNCHTTP Model instead
+    //httpPostJson(uri: "#####SEND EVENTS TO YOUR ENDPOINT######",   body:[source: "smart_things", device: evt.deviceId, eventType: evt.name, value: evt.value, event_date: evt.isoDate, units: evt.unit, event_source: evt.source, state_changed: evt.isStateChange()]) {
+    //    log.debug evt.name+" Event data successfully posted"
+    //}
+}
+
+/**
+* Builds a map of all subscribed devices and returns a unique list of devices
+*
+* @return returns a unique list of devices
+*/
 private getAllSubscribed() {
     def dev_list = []
     capabilities.each { 
@@ -587,6 +738,33 @@ private getAllSubscribed() {
     return dev_list?.findAll()?.flatten().unique { it.id }
 }
 
+/**
+* finds a device by id in subscribed capabilities
+*
+* @param id is a device uuid
+* @return device object
+*/
+def findDevice(id) {
+	def device = null
+    capabilities.find { 
+        settings[it[2]].find { d ->
+        	//log.debug id + " : " + d.id
+            if (d.id == id) {
+            	device = d
+                return true
+            }
+            
+        }
+    }
+    return device
+}
+
+/**
+* Builds a map of device items
+*
+* @param device object and s true/false
+* @return a map of device details
+*/
 private item(device, s) {
     device && s ? [device_id: device.id, 
                    label: device.displayName, 
@@ -595,6 +773,12 @@ private item(device, s) {
                    eventSource: s.eventSource] : null
 }
 
+/**
+* gets Routine information
+*
+* @param routine object
+* @return a map of routine information
+*/
 private getRoutine(routine) {
     def result = [:]
     ["id", "label"].each {
@@ -603,6 +787,12 @@ private getRoutine(routine) {
     result
 }
 
+/**
+* gets mode information
+*
+* @param mode object
+* @return a map of mode information
+*/
 private getMode(mode, explodedView = false) {
     def result = [:]
     ["id", "name"].each {
@@ -617,6 +807,36 @@ private getMode(mode, explodedView = false) {
     result
 }
 
+/**
+* Builds a map of device details including attributes
+*
+* @param device is the device object, explodedView is true/false
+* @return device details
+*/
+private deviceItem(device, explodedView) {
+    if (!device) return null
+    def results = [:]
+    ["id", "name", "displayName"].each {
+        results << [(it) : device."$it"]
+    }
+
+    if(explodedView) {
+        def attrsAndVals = [:]
+        device.supportedAttributes?.each {
+            attrsAndVals << [(it.name) : device.currentValue(it.name)]
+        }
+
+        results << ["attributes" : attrsAndVals]
+    }
+    results
+}
+
+/**
+* Builds a map of event details based on event
+*
+* @param evt is the event object
+* @return a map of event details
+*/
 private eventJson(evt) {
     def update = [:]
     update.id = evt.deviceId
@@ -627,65 +847,73 @@ private eventJson(evt) {
     return update
 }
 
+/**
+* Gets the weather feature based on location / zipcode
+*
+* @param feature is the weather parameter to get
+* @return weather information
+*/
 private get(feature) {
-	getWeatherFeature(feature, zipCode)
+    getWeatherFeature(feature, zipCode)
 }
 
+/**
+* Gets local Date based on TimeZone
+*
+* @param timeZone
+* @return date
+*/
 private localDate(timeZone) {
-	def df = new java.text.SimpleDateFormat("yyyy-MM-dd")
-	df.setTimeZone(TimeZone.getTimeZone(timeZone))
-	df.format(new Date())
+    def df = new java.text.SimpleDateFormat("yyyy-MM-dd")
+    df.setTimeZone(TimeZone.getTimeZone(timeZone))
+    df.format(new Date())
 }
 
+/**
+* Estimates current light level (LUX) based on weather info
+*
+* @param sunriseDate is day of sunrise, sunsetDate is day of sunset, weatherIcon is a string
+* @return estimated lux value
+*/
 private estimateLux(sunriseDate, sunsetDate, weatherIcon) {
-	def lux = 0
-	def now = new Date().time
-	if (now > sunriseDate.time && now < sunsetDate.time) {
-		//day
-		switch(weatherIcon) {
-			case 'tstorms':
-				lux = 200
-				break
-			case ['cloudy', 'fog', 'rain', 'sleet', 'snow', 'flurries',
-				'chanceflurries', 'chancerain', 'chancesleet',
-				'chancesnow', 'chancetstorms']:
-				lux = 1000
-				break
-			case 'mostlycloudy':
-				lux = 2500
-				break
-			case ['partlysunny', 'partlycloudy', 'hazy']:
-				lux = 7500
-				break
-			default:
-				//sunny, clear
-				lux = 10000
-		}
+    def lux = 0
+    def now = new Date().time
+    if (now > sunriseDate.time && now < sunsetDate.time) {
+        //day
+        switch(weatherIcon) {
+            case 'tstorms':
+            lux = 200
+            break
+            case ['cloudy', 'fog', 'rain', 'sleet', 'snow', 'flurries', 'chanceflurries', 'chancerain', 'chancesleet', 'chancesnow', 'chancetstorms']:
+            lux = 1000
+            break
+            case 'mostlycloudy':
+            lux = 2500
+            break
+            case ['partlysunny', 'partlycloudy', 'hazy']:
+            lux = 7500
+            break
+            default:
+                //sunny, clear
+                lux = 10000
+        }
+        //adjust for dusk/dawn
+        def afterSunrise = now - sunriseDate.time
+        def beforeSunset = sunsetDate.time - now
+        def oneHour = 1000 * 60 * 60
 
-		//adjust for dusk/dawn
-		def afterSunrise = now - sunriseDate.time
-		def beforeSunset = sunsetDate.time - now
-		def oneHour = 1000 * 60 * 60
-
-		if(afterSunrise < oneHour) {
-			//dawn
-			lux = (long)(lux * (afterSunrise/oneHour))
-		} else if (beforeSunset < oneHour) {
-			//dusk
-			lux = (long)(lux * (beforeSunset/oneHour))
-		}
-	}
-	else {
-		//night - always set to 10 for now
-		//could do calculations for dusk/dawn too
-		lux = 10
-	}
-
-	lux
+        if(afterSunrise < oneHour) {
+            //dawn
+            lux = (long)(lux * (afterSunrise/oneHour))
+        } else if (beforeSunset < oneHour) {
+            //dusk
+            lux = (long)(lux * (beforeSunset/oneHour))
+        }
+    }
+    else {
+        //night - always set to 10 for now
+        //could do calculations for dusk/dawn too
+        lux = 10
+    }
+    lux
 }
-
-//TODO get SHM status String alarmSystemStatus = "${location?.currentState("alarmSystemStatus").stringValue}"
-//TODO create alarmStatus function for processing changes to alarm state aka SHM
-//TODO update alarm state with this sendLocationEvent(name: "alarmSystemStatus", value: status)  values = off,away,stay
-//TODO add function and endpoint for sending notifications
-//TODO add endpoint for controlling a group of deviceids in JSON (for group off commands)

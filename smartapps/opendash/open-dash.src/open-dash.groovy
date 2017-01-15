@@ -34,6 +34,8 @@ definition(
 mappings {
     // location
     path("/locations") 							{	action: [	GET: "listLocation"        														]}
+    // contacts
+    path("/contacts") 							{	action: [	GET: "listContacts"        														]}
     // modes    
     path("/modes") 								{   action: [   GET: "listModes"        														]}
     path("/modes/:id") 							{	action: [   GET: "switchMode"        														]}
@@ -138,6 +140,12 @@ preferences {
             input cap[2], cap[0], title: "Select ${cap[1]} Devices", multiple:true, required: false
         }
     }
+    section("Send Notifications?") {
+        input("recipients", "contact", title: "Send notifications to") {
+            input "phone", "phone", title: "Warn with text message (optional)",
+                description: "Phone Number", required: false
+        }
+    }
 }
 
 def installed() {
@@ -154,7 +162,7 @@ def initialize() {
     if (!state.updates) state.updates = []
 
     for (cap in capabilities) {
-        if(cap[3] != "") {
+        if(cap[3] != "" && cap[2]) {
             subscribe(settings[cap[2]], cap[3], handleEvent)
         }
     }
@@ -239,9 +247,31 @@ def listLocation() {
         hubs << getHub(it)
     }
     result << ["hubs" : hubs]
-    //log.debug "Returning LOCATION: $result"
+    log.debug "Returning LOCATION: $result"
     //result
     render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[result]]).toPrettyString()
+}
+
+/****************************
+* Contact Methods
+****************************/
+
+/**
+* Gets the location object
+*
+* @return renders json
+*/
+def listContacts() {
+    def results = []
+    recipients?.each { 
+    	def result = [:]
+    	def contact = [ "deliveryType": it.deliveryType, "id": it.id, "label" : it.label, "name": it.name]
+        def contactDetails = [ "hasSMS" : it.contact.hasSMS, "id": it.contact.id, "title": it.contact.title, pushProfile : it.contact.pushProfile as String, middleInitial: it.contact.middleInitial, firstName : it.contact.firstName, image: it.contact.image, initials: it.contact.initials, hasPush: it.contact.hasPush, lastName: it.contact.lastName, fullName : it.contact.fullName, hasEmail: it.contact.hasEmail]
+        log.debug "GET PROPS: " + it.contact.pushProfile.getProperties()
+        contact << [contact: contactDetails]
+        results << contact
+    }
+    render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[results]]).toPrettyString()    
 }
 
 /****************************
@@ -295,10 +325,33 @@ def getHubDetail() {
 * @return renders json
 */
 def sendNotification() {
-    //TODO Implement Notification Endpoint
-    def id = request.JSON?.id
-    log.debug "In Notifications " + id
-    render contentType: "text/json", data: new JsonBuilder([status: "ok", data:["not implemented"]]).toPrettyString()
+    def id = request.JSON?.id  //id of recipients
+    log.debug "recipients configured: $recipients"
+    def message = request.JSON?.message
+	def method = request.JSON?.method
+    if (location.contactBookEnabled && recipients) {
+        log.debug "contact book enabled!"
+        def recp = recipients.find{ it.id == id }
+        log.debug recp
+        if (recp) {
+            sendNotificationToContacts(message, [recp])
+        } else {
+            sendNotificationToContacts(message, recipients)
+        }
+    } else {
+        log.debug "contact book not enabled"
+        if(method) {
+            if(method == "sms") {
+                if (phone) {
+                    sendSms(phone, message)
+                }
+            } else if (method == "push") {
+            	sendPush(message)
+            }
+        }         
+    }
+log.debug "In Notifications " + id
+render contentType: "text/json", data: new JsonBuilder([status: "ok", data:["message sent"]]).toPrettyString()
 }
 
 /****************************

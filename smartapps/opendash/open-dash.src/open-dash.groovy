@@ -1041,7 +1041,15 @@ private eventJson(evt) {
     def update = [:]
     update.id = evt.deviceId
     update.name = evt.name
-    update.value = evt.value
+    //find device by id
+    def device = findDevice(evt.deviceId)
+    def attrsAndVals = []
+        device.supportedAttributes?.each {
+        	def attribs = ["name" : (it.name), "currentValue" : device.currentValue(it.name), "dataType" : it.dataType]
+            attrsAndVals << attribs
+        }
+    update.attributes =   attrsAndVals
+    //update.value = evt.value
     update.name = evt.displayName
     update.date = evt.isoDate
     return update

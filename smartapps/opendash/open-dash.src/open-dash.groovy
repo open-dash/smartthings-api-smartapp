@@ -53,7 +53,7 @@ mappings {
     path("/devices/:id/commands") 				{	action: [	GET: "listDeviceCommands"        												]}    
     path("/devices/:id/:command")				{   action: [	GET: "sendDeviceCommand"          												]}    
     path("/devices/:id/:command/:secondary")	{   action: [   GET: "sendDeviceCommandSecondary"           									]}    
-    path("/devices/:command")					{   action: [	POST: "sendDevicesCommand"          											]}     
+    path("/devices/commands")					{   action: [	POST: "sendDevicesCommands"         											]}     
     // routines
     path("/routines") 							{   action: [   GET: "listRoutines"        														]}
     path("/routines/:id") 						{   action: [   GET: "listRoutines",            	POST: "executeRoutine"        				]}
@@ -135,10 +135,13 @@ private def getApprovedCommands() {
 }
 
 preferences {
-    section("Allow Endpoint to Control These Things by Their Capabilities (You only need to choose one capability to get access to full device, however, selecting all capabilities will not create duplicate devices...") {
-        for (cap in capabilities) {
-            input cap[2], cap[0], title: "Select ${cap[1]} Devices", multiple:true, required: false
-        }
+    section("About Open-Dash") {
+        href(name: "hrefNotRequired",
+             title: "About Open-Dash",
+             required: false,
+             style: "external",
+             url: "https://open-dash.com/about/",
+             description: "Tap to view the Open-Dash website in mobile browser")
     }
     section("Send Notifications?") {
         input("recipients", "contact", title: "Send notifications to") {
@@ -146,6 +149,15 @@ preferences {
                 description: "Phone Number", required: false
         }
     }
+    section("Enable Logging") {
+        input("logging", "bool", title: "Enable Logging for debugging", required: false, default:false) 
+    }
+    section("Allow Endpoint to Control These Things by Their Capabilities (You only need to choose one capability to get access to full device, however, selecting all capabilities will not create duplicate devices...") {
+        for (cap in capabilities) {
+            input cap[2], cap[0], title: "Select ${cap[1]} Devices", multiple:true, required: false
+        }
+    }
+
 }
 
 def installed() {
@@ -158,21 +170,25 @@ def updated() {
 }
 
 def initialize() {
-    log.debug "Initialize called"
+    debug("Initialize called")
     if (!state.updates) state.updates = []
-
+    
     for (cap in capabilities) {
-        if(cap[3] != "" && cap[2]) {
-            subscribe(settings[cap[2]], cap[3], handleEvent)
+        if(cap[3] != "") {
+            if(settings[cap[2]]) {
+            	subscribe(settings[cap[2]], cap[3], eventHandler)
+            }
         }
     }
-    subscribe(location, "alarmSystemStatus", alarmHandler)  
+    
+    subscribe(location, "alarmSystemStatus", alarmHandler)
+    
     //TODO Remove before publication Testing Use Only
     if (!state.accessToken) {
         createAccessToken()
     }
     def url = "Testing URL is " + getApiServerUrl() + "/api/smartapps/installations/${app.id}?access_token=${state.accessToken}"
-    log.debug url
+    debug(url)
     //TODO End removal area
 }
 
@@ -186,6 +202,7 @@ def initialize() {
 * @param evt from location object.
 */
 def alarmHandler(evt) {
+	debug("alarmHandler called")
     if (!state.updates) state.updates = []
     //evt.value = ["stay","away","off"]
     def shm = eventJson(evt)
@@ -199,9 +216,10 @@ def alarmHandler(evt) {
 * @return renders json
 */
 def getSHMStatus() {
+	debug("getSHMStatus called")
     def alarmSystemStatus = "${location?.currentState("alarmSystemStatus").stringValue}"
-    log.debug "SHM Status is " + alarmSystemStatus
-        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[alarmSystemStatus]]).toPrettyString()
+    debug("SHM Status is " + alarmSystemStatus)
+    render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[alarmSystemStatus]]).toPrettyString()
 }
 
 /**
@@ -210,11 +228,12 @@ def getSHMStatus() {
 * @return renders json
 */
 def setSHMMode() {
+	debug("setSHMMode called")
     def validmodes = ["off", "away", "stay"]
     def status = params.mode
     def mode = validmodes?.find{it == status}
     if(mode) {
-        log.debug "Setting SHM to $status in location: $location.name"
+        debug("Setting SHM to $status in location: $location.name")
         sendLocationEvent(name: "alarmSystemStatus", value: status)
         render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[status]]).toPrettyString()
     } else {
@@ -232,6 +251,7 @@ def setSHMMode() {
 * @return renders json
 */
 def listLocation() {
+	debug("listLocation called")
     def result = [:]
     ["contactBookEnabled", "name", "temperatureScale", "zipCode"].each {
         result << [(it) : location."$it"]
@@ -247,7 +267,7 @@ def listLocation() {
         hubs << getHub(it)
     }
     result << ["hubs" : hubs]
-    log.debug "Returning LOCATION: $result"
+    debug("Returning LOCATION: $result")
     //result
     render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[result]]).toPrettyString()
 }
@@ -262,12 +282,12 @@ def listLocation() {
 * @return renders json
 */
 def listContacts() {
+	debug("listContacts called")
     def results = []
     recipients?.each { 
-    	def result = [:]
-    	def contact = [ "deliveryType": it.deliveryType, "id": it.id, "label" : it.label, "name": it.name]
+        def result = [:]
+        def contact = [ "deliveryType": it.deliveryType, "id": it.id, "label" : it.label, "name": it.name]
         def contactDetails = [ "hasSMS" : it.contact.hasSMS, "id": it.contact.id, "title": it.contact.title, pushProfile : it.contact.pushProfile as String, middleInitial: it.contact.middleInitial, firstName : it.contact.firstName, image: it.contact.image, initials: it.contact.initials, hasPush: it.contact.hasPush, lastName: it.contact.lastName, fullName : it.contact.fullName, hasEmail: it.contact.hasEmail]
-        log.debug "GET PROPS: " + it.contact.pushProfile.getProperties()
         contact << [contact: contactDetails]
         results << contact
     }
@@ -284,11 +304,12 @@ def listContacts() {
 * @return renders json
 */
 def listHubs() {
+	debug("listHubs called")
     def result = []
     location.hubs?.each {
         result << getHub(it)
     }
-    log.debug "Returning HUBS: $result"
+    debug("Returning HUBS: $result")
     render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[result]]).toPrettyString()    
 }
 
@@ -299,8 +320,9 @@ def listHubs() {
 * @return renders json
 */
 def getHubDetail() {
+	debug("getHubDetail called")
     def id = params.id
-    log.debug "getting hub detail for id: " + id
+    debug("getting hub detail for id: " + id)
     if(id) {
         def hub = location.hubs?.find{it.id == id}
         def result = [:]
@@ -313,7 +335,7 @@ def getHubDetail() {
         }
         result << ["type" : hub.type as String]
 
-        log.debug "Returning HUB: $result"
+        debug("Returning HUB: $result")
         render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[result]]).toPrettyString()
     }
 }
@@ -325,33 +347,34 @@ def getHubDetail() {
 * @return renders json
 */
 def sendNotification() {
+	debug("sendNotification called")
     def id = request.JSON?.id  //id of recipients
-    log.debug "recipients configured: $recipients"
+    debug("recipients configured: $recipients")
     def message = request.JSON?.message
-	def method = request.JSON?.method
+    def method = request.JSON?.method
     if (location.contactBookEnabled && recipients) {
-        log.debug "contact book enabled!"
+        debug("contact book enabled!")
         def recp = recipients.find{ it.id == id }
-        log.debug recp
+        debug(recp)
         if (recp) {
             sendNotificationToContacts(message, [recp])
         } else {
             sendNotificationToContacts(message, recipients)
         }
     } else {
-        log.debug "contact book not enabled"
+        debug("contact book not enabled")
         if(method) {
             if(method == "sms") {
                 if (phone) {
                     sendSms(phone, message)
                 }
             } else if (method == "push") {
-            	sendPush(message)
+                sendPush(message)
             }
         }         
     }
-log.debug "In Notifications " + id
-render contentType: "text/json", data: new JsonBuilder([status: "ok", data:["message sent"]]).toPrettyString()
+    debug("In Notifications " + id)
+    render contentType: "text/json", data: new JsonBuilder([status: "ok", data:["message sent"]]).toPrettyString()
 }
 
 /****************************
@@ -365,6 +388,7 @@ render contentType: "text/json", data: new JsonBuilder([status: "ok", data:["mes
 * @return renders json
 */
 def listModes() {
+	debug("listModes called")
     def id = params.id
     // if there is an id parameter, list only that mode. Otherwise list all modes in location
     if(id) {
@@ -379,7 +403,7 @@ def listModes() {
         location.modes?.each {
             result << getMode(it)
         }
-        log.debug "Returning MODES: $result"
+        debug("Returning MODES: $result")
         render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[result]]).toPrettyString()
     }
 }
@@ -391,10 +415,11 @@ def listModes() {
 * @return renders json
 */
 def switchMode() {
+	debug("switchMode called")
     def id = params.id
     def mode = location.modes?.find{it.id == id}
     if(mode) {
-        log.debug "Setting mode to $mode.name in location: $location.name"
+        debug("Setting mode to $mode.name in location: $location.name")
         location.setMode(mode.name)
         render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[mode.name]]).toPrettyString()
     } else {
@@ -413,6 +438,7 @@ def switchMode() {
 * @return renders json
 */
 def listRoutines() {
+	debug("listRoutines called")
     def id = params.id
     def results = []
     // if there is an id parameter, list only that routine. Otherwise list all routines in location
@@ -422,13 +448,13 @@ def listRoutines() {
         if(!routine) {
             httpError(404, "Routine not found")
         } else {
-       	render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[getRoutine(routine)]]).toPrettyString()            
+            render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[getRoutine(routine)]]).toPrettyString()            
         }
     } else {
         location.helloHome?.getPhrases().each { routine ->
             results << getRoutine(routine)
         }
-        log.debug "Returning ROUTINES: $results"
+        debug("Returning ROUTINES: $results")
         render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[results]]).toPrettyString()
     }
 }
@@ -440,12 +466,13 @@ def listRoutines() {
 * @return renders json
 */
 def executeRoutine() {
+	debug("executeRoutine called")
     def id = params.id
     def routine = location.helloHome?.getPhrases().find{it.id == id}
     if(!routine) {
         httpError(404, "Routine not found")
     } else {
-        log.debug "Executing Routine: $routine.label in location: $location.name"
+        debug("Executing Routine: $routine.label in location: $location.name")
         location.helloHome?.execute(routine.label)
         render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[routine]]).toPrettyString()
     }
@@ -462,11 +489,11 @@ def executeRoutine() {
 * @return renders json
 */
 def listDevices() {
+	debug("listDevices called")
     def id = params.id
     // if there is an id parameter, list only that device. Otherwise list all devices in location
     if(id) {
-        def device = findDevice(id)
-        log.debug device      
+        def device = findDevice(id)    
         render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[deviceItem(device, true)]]).toPrettyString()
     } else {
         def result = []
@@ -482,6 +509,7 @@ def listDevices() {
 * @return renders json
 */
 def listDeviceEvents() {
+	debug("listDeviceEvents called")
     def numEvents = 20
     def id = params.id
     def device = findDevice(id)
@@ -502,6 +530,7 @@ def listDeviceEvents() {
 * @return renders json
 */
 def listDeviceCommands() {
+	debug("listDeviceCommands called")
     def id = params.id
     def device = findDevice(id) 
     def result = []
@@ -522,15 +551,30 @@ def listDeviceCommands() {
 * @return renders json
 */
 def sendDevicesCommands() {
-    //TODO get list of device id's from POST
-    //LOOP through device ids
-    //if (approvedCommands.contains(command)) {
-    //device."$command"()  
-    //}
-    //END LOOP
-    //RETURN list of ids and succsess / fail for each
+	debug("sendDevicesCommands called")
+    def group = request.JSON?.group
+    def results = []
+    group.each {
+        def device = findDevice(it?.id) 
+        if(device) {
+            if(!it.value) {
+                if (approvedCommands.contains(it.command)) {
+                    debug("Sending command ${it.command} to Device id ${it.id}")
+                    device."$it.command"()  
+                    results << [ id : it.id, status : "success", command : it.command, state: [deviceItem(device, true)] ]
+                }
+            } else {
+                def secondary = it.value.toInteger()
+                debug("Sending command ${it.command} to Device id ${it.id} with value ${it.value}")
+                device."$it.command"(secondary)
+                results << [ id : it.id, status : "success", command : it.command, value : it.value, state: [deviceItem(device, true)] ]
+            }
+        } else {
+            results << [ id : it.id, status : "not found" ]
+        }
+    }
+    render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[results]]).toPrettyString()
 }
-
 /**
 * Executes Supported Command for a Device
 *
@@ -538,6 +582,7 @@ def sendDevicesCommands() {
 * @return renders json
 */
 def sendDeviceCommand() {
+	debug("sendDeviceCommand called")
     def id = params.id
     def device = findDevice(id) 
     def command = params.command
@@ -553,7 +598,7 @@ def sendDeviceCommand() {
     if(!device) {
         httpError(404, "Device not found")
     } else {
-        log.debug "Executing command: $command on device: $device.displayName"
+        debug("Executing command: $command on device: $device.displayName")
         render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[deviceItem(device, true)]]).toPrettyString()
     }
 }
@@ -565,6 +610,7 @@ def sendDeviceCommand() {
 * @return renders json
 */
 def sendDeviceCommandSecondary() {
+	debug("sendDeviceCommandSecondary called")
     def id = params.id
     def device = findDevice(id) 
     def command = params.command
@@ -577,7 +623,7 @@ def sendDeviceCommandSecondary() {
     if(!device) {
         httpError(404, "Device not found")
     } else {
-        log.debug "Executing with secondary command: $command $secondary on device: $device.displayName"
+        debug("Executing with secondary command: $command $secondary on device: $device.displayName")
         render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[deviceItem(device, true)]]).toPrettyString()
     }
 }
@@ -588,8 +634,9 @@ def sendDeviceCommandSecondary() {
 * @return renders json
 */
 def updates() {
+	debug("updates called")
     //render out json of all updates since last html loaded
-        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[state.updates]]).toPrettyString()
+    render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[state.updates]]).toPrettyString()
 }
 
 /**
@@ -598,6 +645,7 @@ def updates() {
 * @return renders json
 */
 def allDevices() {
+	debug("allDevices called")
     def allAttributes = []
 
     allSubscribed.each {
@@ -627,6 +675,7 @@ def allDevices() {
 * @return renders json
 */
 def listDeviceTypes() {
+	debug("listDeviceTypes called")
     def deviceData = []
     allSubscribed?.each {
         it.collect{ i ->    
@@ -644,6 +693,7 @@ def listDeviceTypes() {
 * @return renders json
 */
 def getWeather() {
+	debug("getWeather called")
     // Current conditions
     def obs = get("conditions")?.current_observation
 
@@ -681,9 +731,7 @@ def getWeather() {
     // Alerts
     def alerts = get("alerts")?.alerts
     def newKeys = alerts?.collect{it.type + it.date_epoch} ?: []
-    log.debug "WUSTATION: newKeys: $newKeys"
     def oldKeys = state.alertKeys?.jsonValue
-    log.debug "WUSTATION: oldKeys: $oldKeys"
 
     def noneString = "no current weather alerts"
     if (!newKeys && oldKeys == null) {
@@ -709,7 +757,7 @@ def getWeather() {
             obs << [ alertString : noneString ]
         }
     }
-    log.debug obs
+    debug(obs)
     if (obs) {
         render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[obs]]).toPrettyString()
     }
@@ -726,6 +774,7 @@ def getWeather() {
 * @return a map of hub
 */
 private getHub(hub, explodedView = false) {
+	debug("getHub called")
     def result = [:]
     //put the id and name into the result
     ["id", "name"].each {
@@ -739,7 +788,7 @@ private getHub(hub, explodedView = false) {
         }
         result << ["type" : hub.type as String]
     }
-    log.debug "Returning HUB: $result"
+    debug("Returning HUB: $result")
     result
 }
 
@@ -748,8 +797,8 @@ private getHub(hub, explodedView = false) {
 *
 * @param evt is the event object
 */
-private handleEvent(evt) {
-
+def eventHandler(evt) {
+	debug("eventHandler called")
     //send to webhook api
     logField(evt) { it.toString() }
 
@@ -771,10 +820,11 @@ private handleEvent(evt) {
 * @param evt is the event object, c is a Closure
 */
 private logField(evt, Closure c) {
-    //log.debug "The souce of this event is ${evt.source} and it was ${evt.id}"
+	debug("logField called")
+    debug("The souce of this event is ${evt.source} and it was ${evt.id}")
     //TODO Use ASYNCHTTP Model instead
     //httpPostJson(uri: "#####SEND EVENTS TO YOUR ENDPOINT######",   body:[source: "smart_things", device: evt.deviceId, eventType: evt.name, value: evt.value, event_date: evt.isoDate, units: evt.unit, event_source: evt.source, state_changed: evt.isStateChange()]) {
-    //    log.debug evt.name+" Event data successfully posted"
+    //    debug(evt.name+" Event data successfully posted")
     //}
 }
 
@@ -784,6 +834,7 @@ private logField(evt, Closure c) {
 * @return returns a unique list of devices
 */
 private getAllSubscribed() {
+	debug("getAllSubscribed called")
     def dev_list = []
     capabilities.each { 
         dev_list << settings[it[2]] 
@@ -798,15 +849,15 @@ private getAllSubscribed() {
 * @return device object
 */
 def findDevice(id) {
-	def device = null
+	debug("findDevice called")
+    def device = null
     capabilities.find { 
         settings[it[2]].find { d ->
-        	//log.debug id + " : " + d.id
             if (d.id == id) {
-            	device = d
+                device = d
                 return true
             }
-            
+
         }
     }
     return device
@@ -819,6 +870,7 @@ def findDevice(id) {
 * @return a map of device details
 */
 private item(device, s) {
+	debug("item called")
     device && s ? [device_id: device.id, 
                    label: device.displayName, 
                    name: s.name, value: s.value, 
@@ -833,6 +885,7 @@ private item(device, s) {
 * @return a map of routine information
 */
 private getRoutine(routine) {
+	debug("getRoutine called")
     def result = [:]
     ["id", "label"].each {
         result << [(it) : routine."$it"]
@@ -847,6 +900,7 @@ private getRoutine(routine) {
 * @return a map of mode information
 */
 private getMode(mode, explodedView = false) {
+	debug("getMode called")
     def result = [:]
     ["id", "name"].each {
         result << [(it) : mode."$it"]
@@ -867,6 +921,7 @@ private getMode(mode, explodedView = false) {
 * @return device details
 */
 private deviceItem(device, explodedView) {
+	debug("deviceItem called")
     if (!device) return null
     def results = [:]
     ["id", "name", "displayName"].each {
@@ -891,6 +946,7 @@ private deviceItem(device, explodedView) {
 * @return a map of event details
 */
 private eventJson(evt) {
+	debug("eventJson called")
     def update = [:]
     update.id = evt.deviceId
     update.name = evt.name
@@ -907,6 +963,7 @@ private eventJson(evt) {
 * @return weather information
 */
 private get(feature) {
+	debug("get called")
     getWeatherFeature(feature, zipCode)
 }
 
@@ -917,6 +974,7 @@ private get(feature) {
 * @return date
 */
 private localDate(timeZone) {
+	debug("localDate called")
     def df = new java.text.SimpleDateFormat("yyyy-MM-dd")
     df.setTimeZone(TimeZone.getTimeZone(timeZone))
     df.format(new Date())
@@ -929,6 +987,7 @@ private localDate(timeZone) {
 * @return estimated lux value
 */
 private estimateLux(sunriseDate, sunsetDate, weatherIcon) {
+	debug("estimateLux called")
     def lux = 0
     def now = new Date().time
     if (now > sunriseDate.time && now < sunsetDate.time) {
@@ -969,4 +1028,10 @@ private estimateLux(sunriseDate, sunsetDate, weatherIcon) {
         lux = 10
     }
     lux
+}
+
+def debug(evt) {
+	if (logging) {
+    	log.debug evt
+    }
 }

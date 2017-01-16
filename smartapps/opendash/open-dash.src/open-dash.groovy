@@ -614,7 +614,7 @@ def sendDeviceCommandSecondary() {
     def id = params.id
     def device = findDevice(id) 
     def command = params.command
-    def secondary = params.secondary.toInteger()
+    def secondary = params.secondary.toInteger()  //TODO review all secondary command values, is Integer valid for all? If not, build something to address this
 
     device."$command"(secondary)
     if(!command) {

@@ -7,7 +7,7 @@ Copy and Paste Method
 
 GitHub Integration Method
 (coming soon)
-C
+
 If Using Open-Dash Core Server (meteor)
 * Open My Smartapps and the Open-Dash SmartApp in IDE 
 * Click on App Settings in upper right

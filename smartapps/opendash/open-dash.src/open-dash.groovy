@@ -626,7 +626,9 @@ def sendDeviceCommandSecondary() {
     def id = params?.id
     def device = findDevice(id) 
     def command = params?.command
-    def secondary = params.secondary.toInteger()  //TODO review all secondary command values, is Integer valid for all? If not, build something to address this
+    def commandType = secondaryType.find { it.key == command.toString()}?.value
+    debug(commandType)
+    def secondary = params.secondary.asType(commandType) //TODO need to test all possible commandTypes and see if it converts properly
 
     device."$command"(secondary)
     if(!command) {

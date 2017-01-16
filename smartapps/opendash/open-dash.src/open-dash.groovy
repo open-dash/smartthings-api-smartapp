@@ -177,10 +177,13 @@ def updated() {
     initialize()
 }
 
+// Called on installed or updated from mobile app or oauth flow. 
 def initialize() {
     debug("Initialize called")
+    //init updates state var if null
     if (!state.updates) state.updates = []
     
+    //loop through our capabilities list and subscribe to all devices if capability has something to subscribe to and route to eventHandler
     for (cap in capabilities) {
         if(cap[3] != "") {
             if(settings[cap[2]]) {
@@ -189,6 +192,7 @@ def initialize() {
         }
     }
     
+    //subscribe to SHM location status changes and route to alarmHandler
     subscribe(location, "alarmSystemStatus", alarmHandler)
     
     //TODO Remove before publication Testing Use Only
@@ -212,9 +216,9 @@ def initialize() {
 def alarmHandler(evt) {
 	debug("alarmHandler called")
     if (!state.updates) state.updates = []
-    //evt.value = ["stay","away","off"]
     def shm = eventJson(evt)
     shm.id = "shm"
+    //update updates state variable with SHM status
     state.updates << shm
 }
 
@@ -238,7 +242,7 @@ def getSHMStatus() {
 def setSHMMode() {
 	debug("setSHMMode called")
     def validmodes = ["off", "away", "stay"]
-    def status = params.mode
+    def status = params?.mode
     def mode = validmodes?.find{it == status}
     if(mode) {
         debug("Setting SHM to $status in location: $location.name")
@@ -285,7 +289,7 @@ def listLocation() {
 ****************************/
 
 /**
-* Gets the location object
+* Gets the contact object
 *
 * @return renders json
 */
@@ -329,7 +333,7 @@ def listHubs() {
 */
 def getHubDetail() {
 	debug("getHubDetail called")
-    def id = params.id
+    def id = params?.id
     debug("getting hub detail for id: " + id)
     if(id) {
         def hub = location.hubs?.find{it.id == id}
@@ -424,7 +428,7 @@ def listModes() {
 */
 def switchMode() {
 	debug("switchMode called")
-    def id = params.id
+    def id = params?.id
     def mode = location.modes?.find{it.id == id}
     if(mode) {
         debug("Setting mode to $mode.name in location: $location.name")
@@ -447,7 +451,7 @@ def switchMode() {
 */
 def listRoutines() {
 	debug("listRoutines called")
-    def id = params.id
+    def id = params?.id
     def results = []
     // if there is an id parameter, list only that routine. Otherwise list all routines in location
     if(id) {
@@ -475,7 +479,7 @@ def listRoutines() {
 */
 def executeRoutine() {
 	debug("executeRoutine called")
-    def id = params.id
+    def id = params?.id
     def routine = location.helloHome?.getPhrases().find{it.id == id}
     if(!routine) {
         httpError(404, "Routine not found")
@@ -498,7 +502,7 @@ def executeRoutine() {
 */
 def listDevices() {
 	debug("listDevices called")
-    def id = params.id
+    def id = params?.id
     // if there is an id parameter, list only that device. Otherwise list all devices in location
     if(id) {
         def device = findDevice(id)    
@@ -519,7 +523,7 @@ def listDevices() {
 def listDeviceEvents() {
 	debug("listDeviceEvents called")
     def numEvents = 20
-    def id = params.id
+    def id = params?.id
     def device = findDevice(id)
 
     if (!device) {
@@ -539,7 +543,7 @@ def listDeviceEvents() {
 */
 def listDeviceCommands() {
 	debug("listDeviceCommands called")
-    def id = params.id
+    def id = params?.id
     def device = findDevice(id) 
     def result = []
     if(!device) {
@@ -591,7 +595,7 @@ def sendDevicesCommands() {
 */
 def sendDeviceCommand() {
 	debug("sendDeviceCommand called")
-    def id = params.id
+    def id = params?.id
     def device = findDevice(id) 
     def command = params.command
     def secondary_command = params.level
@@ -619,9 +623,9 @@ def sendDeviceCommand() {
 */
 def sendDeviceCommandSecondary() {
 	debug("sendDeviceCommandSecondary called")
-    def id = params.id
+    def id = params?.id
     def device = findDevice(id) 
-    def command = params.command
+    def command = params?.command
     def secondary = params.secondary.toInteger()  //TODO review all secondary command values, is Integer valid for all? If not, build something to address this
 
     device."$command"(secondary)
@@ -1038,6 +1042,7 @@ private estimateLux(sunriseDate, sunsetDate, weatherIcon) {
     lux
 }
 
+//Debug Router to log events if logging is turned on
 def debug(evt) {
 	if (logging) {
     	log.debug evt

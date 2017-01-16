@@ -31,6 +31,7 @@ definition(
     iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience@2x.png",
 )
 
+//all API endpoints are defined here
 mappings {
     // location
     path("/locations") 							{	action: [	GET: "listLocation"        														]}
@@ -64,6 +65,7 @@ mappings {
     path("/weather")							{	action: [ 	GET: "getWeather" 																]}
 }
 
+// our capabilities list
 private def getCapabilities() {
     [   //Capability Prefrence Reference			Display Name					Subscribed Name						Subscribe Attribute        
         ["capability.accelerationSensor",			"Accelaration Sensor",			"accelerations",					"acceleration"				],
@@ -130,8 +132,14 @@ private def getCapabilities() {
     ]  
 }
 
+// Approved Commands for device functions, if it's not in this list, it will not get called, regardless of what is sent.
 private def getApprovedCommands() {
-    ["on","off","toggle","setLevel","setColor","setHue","setSaturation","setColorTemperature","open","close","windowShade.open","windowShade.close","windowShade.presetPosition","lock","unlock","take","alarm.off","alarm.strobe","alarm.siren","alarm.both","thermostat.off","thermostat.heat","thermostat.cool","thermostat.auto","thermostat.emergencyHeat","thermostat.quickSetHeat","thermostat.quickSetCool","thermostat.setHeatingSetpoint","thermostat.setCoolingSetpoint","thermostat.setThermostatMode","fanOn","fanCirculate","fanAuto","setThermostatFanMode","play","pause","stop","nextTrack","previousTrack","mute","unmute","musicPlayer.setLevel","playText","playTextAndRestore","playTextAndResume","playTrack","playTrackAtVolume","playTrackAndRestore","playTrackAndResume","setTrack","setLocalLevel","resumeTrack","restoreTrack","speak","startActivity","getCurrentActivity","getAllActivities","push","beep","refresh","poll","low","med","high","left","right","up","down","home","presetOne","presetTwo","presetThree","presetFour","presetFive","presetSix","presetSeven","presetEight","presetCommand","startLoop","stopLoop","setLoopTime","setDirection","alert","setAdjustedColor","allOn","allOff"]
+    ["on","off","toggle","setLevel","setColor","setHue","setSaturation","setColorTemperature","open","close","windowShade.open","windowShade.close","windowShade.presetPosition","lock","unlock","take","alarm.off","alarm.strobe","alarm.siren","alarm.both","thermostat.off","thermostat.heat","thermostat.cool","thermostat.auto","thermostat.emergencyHeat","thermostat.quickSetHeat","thermostat.quickSetCool","thermostat.setHeatingSetpoint","thermostat.setCoolingSetpoint","thermostat.setThermostatMode","fanOn","fanCirculate","fanAuto","setThermostatFanMode","play","pause","stop","nextTrack","previousTrack","mute","unmute","musicPlayer.setLevel","playText","playTextAndRestore","playTextAndResume","playTrack","playTrackAtVolume","playTrackAndRestore","playTrackAndResume","setTrack","setLocalLevel","resumeTrack","restoreTrack","speak","startActivity","getCurrentActivity","getAllActivities","push","beep","refresh","poll","low","med","high","left","right","up","down","home","presetOne","presetTwo","presetThree","presetFour","presetFive","presetSix","presetSeven","presetEight","presetCommand","startLoop","stopLoop","setLoopTime","setDirection","alert", "setAdjustedColor","allOn","allOff","deviceNotification", "setSchedule", "setTimeRemaining"]
+}
+
+// Map of commands and the data type expected to conform input values to.
+private def getSecondaryType() {
+    ["setLevel": Integer, "playText": String, "playTextAndResume": String, "playTextAndRestore": String, "playTrack" : String, "playTrackAndResume" : String, "playTrackAndRestore": String, "setColor": Map, "setHue": Integer, "setSaturation": Integer, "setColorTemperature": Integer, "startActivity": String, "restoreTrack" :String, "resumeTrack": String, "setTrack": String, "deviceNotification": String, "speak" : String, "setCoolingSetpoint": Integer, "setHeatingSetpoint": Integer, "setSchedule": JSON, "setThermostatFanMode": String, "setThermostatMode": String, "setTimeRemaining": Integer ]
 }
 
 preferences {
@@ -169,10 +177,13 @@ def updated() {
     initialize()
 }
 
+// Called on installed or updated from mobile app or oauth flow. 
 def initialize() {
     debug("Initialize called")
+    //init updates state var if null
     if (!state.updates) state.updates = []
     
+    //loop through our capabilities list and subscribe to all devices if capability has something to subscribe to and route to eventHandler
     for (cap in capabilities) {
         if(cap[3] != "") {
             if(settings[cap[2]]) {
@@ -181,6 +192,7 @@ def initialize() {
         }
     }
     
+    //subscribe to SHM location status changes and route to alarmHandler
     subscribe(location, "alarmSystemStatus", alarmHandler)
     
     //TODO Remove before publication Testing Use Only
@@ -204,9 +216,9 @@ def initialize() {
 def alarmHandler(evt) {
 	debug("alarmHandler called")
     if (!state.updates) state.updates = []
-    //evt.value = ["stay","away","off"]
     def shm = eventJson(evt)
     shm.id = "shm"
+    //update updates state variable with SHM status
     state.updates << shm
 }
 
@@ -230,7 +242,7 @@ def getSHMStatus() {
 def setSHMMode() {
 	debug("setSHMMode called")
     def validmodes = ["off", "away", "stay"]
-    def status = params.mode
+    def status = params?.mode
     def mode = validmodes?.find{it == status}
     if(mode) {
         debug("Setting SHM to $status in location: $location.name")
@@ -277,7 +289,7 @@ def listLocation() {
 ****************************/
 
 /**
-* Gets the location object
+* Gets the contact object
 *
 * @return renders json
 */
@@ -321,7 +333,7 @@ def listHubs() {
 */
 def getHubDetail() {
 	debug("getHubDetail called")
-    def id = params.id
+    def id = params?.id
     debug("getting hub detail for id: " + id)
     if(id) {
         def hub = location.hubs?.find{it.id == id}
@@ -416,7 +428,7 @@ def listModes() {
 */
 def switchMode() {
 	debug("switchMode called")
-    def id = params.id
+    def id = params?.id
     def mode = location.modes?.find{it.id == id}
     if(mode) {
         debug("Setting mode to $mode.name in location: $location.name")
@@ -439,7 +451,7 @@ def switchMode() {
 */
 def listRoutines() {
 	debug("listRoutines called")
-    def id = params.id
+    def id = params?.id
     def results = []
     // if there is an id parameter, list only that routine. Otherwise list all routines in location
     if(id) {
@@ -467,7 +479,7 @@ def listRoutines() {
 */
 def executeRoutine() {
 	debug("executeRoutine called")
-    def id = params.id
+    def id = params?.id
     def routine = location.helloHome?.getPhrases().find{it.id == id}
     if(!routine) {
         httpError(404, "Routine not found")
@@ -490,7 +502,7 @@ def executeRoutine() {
 */
 def listDevices() {
 	debug("listDevices called")
-    def id = params.id
+    def id = params?.id
     // if there is an id parameter, list only that device. Otherwise list all devices in location
     if(id) {
         def device = findDevice(id)    
@@ -511,7 +523,7 @@ def listDevices() {
 def listDeviceEvents() {
 	debug("listDeviceEvents called")
     def numEvents = 20
-    def id = params.id
+    def id = params?.id
     def device = findDevice(id)
 
     if (!device) {
@@ -531,7 +543,7 @@ def listDeviceEvents() {
 */
 def listDeviceCommands() {
 	debug("listDeviceCommands called")
-    def id = params.id
+    def id = params?.id
     def device = findDevice(id) 
     def result = []
     if(!device) {
@@ -563,8 +575,10 @@ def sendDevicesCommands() {
                     device."$it.command"()  
                     results << [ id : it.id, status : "success", command : it.command, state: [deviceItem(device, true)] ]
                 }
-            } else {
-                def secondary = it.value.toInteger()
+            } else {                
+                def commandType = secondaryType.find { i -> i.key == it.command.toString()}?.value
+                debug(commandType)
+                def secondary = it.value.asType(commandType) //TODO need to test all possible commandTypes and see if it converts properly
                 debug("Sending command ${it.command} to Device id ${it.id} with value ${it.value}")
                 device."$it.command"(secondary)
                 results << [ id : it.id, status : "success", command : it.command, value : it.value, state: [deviceItem(device, true)] ]
@@ -583,7 +597,7 @@ def sendDevicesCommands() {
 */
 def sendDeviceCommand() {
 	debug("sendDeviceCommand called")
-    def id = params.id
+    def id = params?.id
     def device = findDevice(id) 
     def command = params.command
     def secondary_command = params.level
@@ -611,10 +625,12 @@ def sendDeviceCommand() {
 */
 def sendDeviceCommandSecondary() {
 	debug("sendDeviceCommandSecondary called")
-    def id = params.id
+    def id = params?.id
     def device = findDevice(id) 
-    def command = params.command
-    def secondary = params.secondary.toInteger()
+    def command = params?.command
+    def commandType = secondaryType.find { it.key == command.toString()}?.value
+    debug(commandType)
+    def secondary = params.secondary.asType(commandType) //TODO need to test all possible commandTypes and see if it converts properly
 
     device."$command"(secondary)
     if(!command) {
@@ -763,6 +779,28 @@ def getWeather() {
     }
 }
 
+/**
+* Handles the subscribed event and updates state variable
+*
+* @param evt is the event object
+*/
+def eventHandler(evt) {
+	debug("eventHandler called")
+    //send to webhook api
+    logField(evt) { it.toString() }
+
+    def js = eventJson(evt) //.inspect().toString()
+    if (!state.updates) state.updates = []
+    def x = state.updates.findAll { js.id == it.id }
+
+    if(x) {
+        for(i in x) {
+            state.updates.remove(i) 
+        }
+    }
+    state.updates << js
+}
+
 /****************************
 * Private Methods
 ****************************/
@@ -790,28 +828,6 @@ private getHub(hub, explodedView = false) {
     }
     debug("Returning HUB: $result")
     result
-}
-
-/**
-* Handles the subscribed event and updates state variable
-*
-* @param evt is the event object
-*/
-def eventHandler(evt) {
-	debug("eventHandler called")
-    //send to webhook api
-    logField(evt) { it.toString() }
-
-    def js = eventJson(evt) //.inspect().toString()
-    if (!state.updates) state.updates = []
-    def x = state.updates.findAll { js.id == it.id }
-
-    if(x) {
-        for(i in x) {
-            state.updates.remove(i) 
-        }
-    }
-    state.updates << js
 }
 
 /**
@@ -1030,6 +1046,7 @@ private estimateLux(sunriseDate, sunsetDate, weatherIcon) {
     lux
 }
 
+//Debug Router to log events if logging is turned on
 def debug(evt) {
 	if (logging) {
     	log.debug evt

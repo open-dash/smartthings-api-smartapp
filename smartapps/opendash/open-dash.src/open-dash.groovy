@@ -996,3 +996,9 @@ private estimateLux(sunriseDate, sunsetDate, weatherIcon) {
     }
     lux
 }
+
+def debug(evt) {
+	if (logging) {
+    	log.debug evt
+    }
+}

@@ -31,6 +31,7 @@ definition(
     iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience@2x.png",
 )
 
+//all API endpoints are defined here
 mappings {
     // location
     path("/locations") 							{	action: [	GET: "listLocation"        														]}
@@ -64,6 +65,7 @@ mappings {
     path("/weather")							{	action: [ 	GET: "getWeather" 																]}
 }
 
+// our capabilities list
 private def getCapabilities() {
     [   //Capability Prefrence Reference			Display Name					Subscribed Name						Subscribe Attribute        
         ["capability.accelerationSensor",			"Accelaration Sensor",			"accelerations",					"acceleration"				],
@@ -130,8 +132,14 @@ private def getCapabilities() {
     ]  
 }
 
+// Approved Commands for device functions, if it's not in this list, it will not get called, regardless of what is sent.
 private def getApprovedCommands() {
-    ["on","off","toggle","setLevel","setColor","setHue","setSaturation","setColorTemperature","open","close","windowShade.open","windowShade.close","windowShade.presetPosition","lock","unlock","take","alarm.off","alarm.strobe","alarm.siren","alarm.both","thermostat.off","thermostat.heat","thermostat.cool","thermostat.auto","thermostat.emergencyHeat","thermostat.quickSetHeat","thermostat.quickSetCool","thermostat.setHeatingSetpoint","thermostat.setCoolingSetpoint","thermostat.setThermostatMode","fanOn","fanCirculate","fanAuto","setThermostatFanMode","play","pause","stop","nextTrack","previousTrack","mute","unmute","musicPlayer.setLevel","playText","playTextAndRestore","playTextAndResume","playTrack","playTrackAtVolume","playTrackAndRestore","playTrackAndResume","setTrack","setLocalLevel","resumeTrack","restoreTrack","speak","startActivity","getCurrentActivity","getAllActivities","push","beep","refresh","poll","low","med","high","left","right","up","down","home","presetOne","presetTwo","presetThree","presetFour","presetFive","presetSix","presetSeven","presetEight","presetCommand","startLoop","stopLoop","setLoopTime","setDirection","alert","setAdjustedColor","allOn","allOff"]
+    ["on","off","toggle","setLevel","setColor","setHue","setSaturation","setColorTemperature","open","close","windowShade.open","windowShade.close","windowShade.presetPosition","lock","unlock","take","alarm.off","alarm.strobe","alarm.siren","alarm.both","thermostat.off","thermostat.heat","thermostat.cool","thermostat.auto","thermostat.emergencyHeat","thermostat.quickSetHeat","thermostat.quickSetCool","thermostat.setHeatingSetpoint","thermostat.setCoolingSetpoint","thermostat.setThermostatMode","fanOn","fanCirculate","fanAuto","setThermostatFanMode","play","pause","stop","nextTrack","previousTrack","mute","unmute","musicPlayer.setLevel","playText","playTextAndRestore","playTextAndResume","playTrack","playTrackAtVolume","playTrackAndRestore","playTrackAndResume","setTrack","setLocalLevel","resumeTrack","restoreTrack","speak","startActivity","getCurrentActivity","getAllActivities","push","beep","refresh","poll","low","med","high","left","right","up","down","home","presetOne","presetTwo","presetThree","presetFour","presetFive","presetSix","presetSeven","presetEight","presetCommand","startLoop","stopLoop","setLoopTime","setDirection","alert", "setAdjustedColor","allOn","allOff","deviceNotification", "setSchedule", "setTimeRemaining"]
+}
+
+// Map of commands and the data type expected to conform input values to.
+private def getSecondaryType() {
+    ["setLevel": Integer, "playText": String, "playTextAndResume": String, "playTextAndRestore": String, "playTrack" : String, "playTrackAndResume" : String, "playTrackAndRestore": String, "setColor": Map, "setHue": Integer, "setSaturation": Integer, "setColorTemperature": Integer, "startActivity": String, "restoreTrack" :String, "resumeTrack": String, "setTrack": String, "deviceNotification": String, "speak" : String, "setCoolingSetpoint": Integer, "setHeatingSetpoint": Integer, "setSchedule": JSON, "setThermostatFanMode": String, "setThermostatMode": String, "setTimeRemaining": Integer ]
 }
 
 preferences {

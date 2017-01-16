@@ -575,8 +575,10 @@ def sendDevicesCommands() {
                     device."$it.command"()  
                     results << [ id : it.id, status : "success", command : it.command, state: [deviceItem(device, true)] ]
                 }
-            } else {
-                def secondary = it.value.toInteger()
+            } else {                
+                def commandType = secondaryType.find { i -> i.key == it.command.toString()}?.value
+                debug(commandType)
+                def secondary = it.value.asType(commandType) //TODO need to test all possible commandTypes and see if it converts properly
                 debug("Sending command ${it.command} to Device id ${it.id} with value ${it.value}")
                 device."$it.command"(secondary)
                 results << [ id : it.id, status : "success", command : it.command, value : it.value, state: [deviceItem(device, true)] ]

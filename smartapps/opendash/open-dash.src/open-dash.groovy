@@ -51,7 +51,8 @@ mappings {
     path("/devices") 							{   action: [   GET: "listDevices"        														]}
     path("/devices/:id") 						{  	action: [   GET: "listDevices"        														]}
     path("/devices/:id/events") 				{   action: [   GET: "listDeviceEvents"        													]}
-    path("/devices/:id/commands") 				{	action: [	GET: "listDeviceCommands"        												]}    
+    path("/devices/:id/commands") 				{	action: [	GET: "listDeviceCommands"        												]}
+    path("/devices/:id/capabilities") 			{	action: [	GET: "listDeviceCapabilities"        												]}   
     path("/devices/:id/:command")				{   action: [	GET: "sendDeviceCommand"          												]}    
     path("/devices/:id/:command/:secondary")	{   action: [   GET: "sendDeviceCommandSecondary"           									]}    
     path("/devices/commands")					{   action: [	POST: "sendDevicesCommands"         											]}     
@@ -550,8 +551,48 @@ def listDeviceCommands() {
         httpError(404, "Device not found")
     } else {
         device.supportedCommands?.each {
-            result << ["command" : it.name, "params"  : [:]]
+            result << ["command" : it.name ]
         }
+    }
+    render contentType: "text/json", data: new JsonBuilder(result).toPrettyString()
+}
+
+/**
+* Gets Subscribed Device Capabilities for location
+*
+* @param params.id is the device id
+* @return renders json
+*/
+def listDeviceCapabilities() {
+	debug("listDeviceCapabilities called")
+    def id = params?.id
+    def device = findDevice(id) 
+    def result = []
+    if(!device) {
+        httpError(404, "Device not found")
+    } else {
+        //device.capabilities?.each {
+        //    result << ["capability" : it.name ]
+        //}
+        def caps = []
+        device.capabilities?.each {
+            caps << it.name 
+            def attribs = []
+            it.attributes?.each { i -> 
+                attribs << [ "name": i.name, "dataType" : i.dataType ]
+                if(i.values) {
+                	def vals = []
+                    i.values.each { v ->
+                    	vals << v
+                    }
+                    attribs << [ "values" : vals]
+                }
+            }
+            if (attribs) {
+            	caps << ["attributes" : attribs ]
+            }
+        }
+        result << ["capabilities" : caps] 
     }
     render contentType: "text/json", data: new JsonBuilder(result).toPrettyString()
 }
@@ -945,12 +986,46 @@ private deviceItem(device, explodedView) {
     }
 
     if(explodedView) {
-        def attrsAndVals = [:]
+        def attrsAndVals = []
         device.supportedAttributes?.each {
-            attrsAndVals << [(it.name) : device.currentValue(it.name)]
+        	def attribs = ["name" : (it.name), "currentValue" : device.currentValue(it.name), "dataType" : it.dataType]
+            
+            if(it.values) {
+                	def vals = []
+                    it.values.each { v ->
+                    	vals << v
+                    }
+                    attribs << [ "values" : vals]
+                }
+                attrsAndVals << attribs
         }
-
         results << ["attributes" : attrsAndVals]
+        
+        def caps = []
+        device.capabilities?.each {
+            caps << it.name 
+            def attribs = []
+            it.attributes.each { i -> 
+                attribs << [ "name": i.name, "dataType" : i.dataType ]
+                if(i.values) {
+                	def vals = []
+                    i.values.each { v ->
+                    	vals << v
+                    }
+                    attribs << [ "values" : vals]
+                }
+            }
+            if (attribs) {
+            	caps << ["attributes" : attribs ]
+            }
+        }
+        results << ["capabilities" : caps] 
+        
+        def cmds = []
+        device.supportedCommands?.each {
+            cmds << it.name
+        }
+        results << ["commands" : cmds] 
     }
     results
 }
@@ -966,7 +1041,15 @@ private eventJson(evt) {
     def update = [:]
     update.id = evt.deviceId
     update.name = evt.name
-    update.value = evt.value
+    //find device by id
+    def device = findDevice(evt.deviceId)
+    def attrsAndVals = []
+        device.supportedAttributes?.each {
+        	def attribs = ["name" : (it.name), "currentValue" : device.currentValue(it.name), "dataType" : it.dataType]
+            attrsAndVals << attribs
+        }
+    update.attributes =   attrsAndVals
+    //update.value = evt.value
     update.name = evt.displayName
     update.date = evt.isoDate
     return update

@@ -6,6 +6,7 @@ Copy and Paste Method
 * Open IDE go to My SmartApps and create new SmartApp -> From Code and Paste code into box, Save
 
 GitHub Integration Method
+
 (coming soon)
 
 If Using Open-Dash Core Server (meteor)

@@ -46,30 +46,28 @@ returns json
 example:
 
 ```
-{
-    "status": "ok",
-    "data": [
-        {
-            "contactBookEnabled": true,
-            "name": "Home",
-            "temperatureScale": "F",
-            "zipCode": "55446",
-            "latitude": "43.07619000",
-            "longitude": "-97.50923000",
-            "timeZone": "Central Standard Time",
-            "currentMode": {
+[
+    {
+        "contactBookEnabled": true,
+        "name": "Home",
+        "temperatureScale": "F",
+        "zipCode": "55446",
+        "latitude": "43.07619000",
+        "longitude": "-97.50923000",
+        "timeZone": "Central Standard Time",
+        "currentMode": {
+            "id": "[UUID]",
+            "name": "Home"
+        },
+        "hubs": [
+            {
                 "id": "[UUID]",
-                "name": "Home"
-            },
-            "hubs": [
-                {
-                    "id": "[UUID]",
-                    "name": "Home Hub"
-                }
-            ]
-        }
-    ]
-}
+                "name": "Home Hub"
+            }
+        ]
+    }
+]
+
 ```
 <a name="contacts"/>
 **/contacts**
@@ -82,53 +80,48 @@ return json
 example:
 
 ```
-{
-    "status": "ok",
-    "data": [
-        [
-            {
-                "deliveryType": "PUSH",
+[
+        {
+            "deliveryType": "PUSH",
+            "id": "[UUID]",
+            "label": "Patrick Stuart - PUSH",
+            "name": "Push",
+            "contact": {
+                "hasSMS": true,
                 "id": "[UUID]",
-                "label": "Patrick Stuart - PUSH",
-                "name": "Push",
-                "contact": {
-                    "hasSMS": true,
-                    "id": "[UUID]",
-                    "title": "Patrick Stuart",
-                    "pushProfile": "Patrick Stuart - PUSH",
-                    "middleInitial": null,
-                    "firstName": "Patrick",
-                    "image": null,
-                    "initials": "PS",
-                    "hasPush": true,
-                    "lastName": "Stuart",
-                    "fullName": "Patrick Stuart",
-                    "hasEmail": true
-                }
-            },
-            {
-                "deliveryType": "SMS",
-                "id": "[UUID]",
-                "label": "Patrick Stuart - SMS",
-                "name": "cell",
-                "contact": {
-                    "hasSMS": true,
-                    "id": "[UUID]e",
-                    "title": "Patrick Stuart",
-                    "pushProfile": "Patrick Stuart - PUSH",
-                    "middleInitial": null,
-                    "firstName": "Patrick",
-                    "image": null,
-                    "initials": "PS",
-                    "hasPush": true,
-                    "lastName": "Stuart",
-                    "fullName": "Patrick Stuart",
-                    "hasEmail": true
-                }
+                "title": "Patrick Stuart",
+                "pushProfile": "Patrick Stuart - PUSH",
+                "middleInitial": null,
+                "firstName": "Patrick",
+                "image": null,
+                "initials": "PS",
+                "hasPush": true,
+                "lastName": "Stuart",
+                "fullName": "Patrick Stuart",
+                "hasEmail": true
             }
-        ]
-    ]
-}
+        },
+        {
+            "deliveryType": "SMS",
+            "id": "[UUID]",
+            "label": "Patrick Stuart - SMS",
+            "name": "cell",
+            "contact": {
+                "hasSMS": true,
+                "id": "[UUID]e",
+                "title": "Patrick Stuart",
+                "pushProfile": "Patrick Stuart - PUSH",
+                "middleInitial": null,
+                "firstName": "Patrick",
+                "image": null,
+                "initials": "PS",
+                "hasPush": true,
+                "lastName": "Stuart",
+                "fullName": "Patrick Stuart",
+                "hasEmail": true
+            }
+        }
+]
 ```
 <a name="modes"/>
 **/modes**
@@ -141,25 +134,22 @@ returns json
 example:
 
 ```
-{
-    "status": "ok",
-    "data": [
-        [
-            {
-                "id": "[UUID]",
-                "name": "Home"
-            },
-            {
-                "id": "[UUID]",
-                "name": "Night"
-            },
-            {
-                "id": "[UUID]",
-                "name": "Away"
-            }
-        ]
-    ]
-}
+
+[
+    {
+        "id": "[UUID]",
+        "name": "Home"
+    },
+    {
+        "id": "[UUID]",
+        "name": "Night"
+    },
+    {
+        "id": "[UUID]",
+        "name": "Away"
+    }
+]
+
 ```
 
 <a name="modes/:id"/>
@@ -173,12 +163,7 @@ returns json
 example:
 
 ```
-{
-    "status": "ok",
-    "data": [
-        "Home"
-    ]
-}
+"Home"
 ```
 
 <a name="hubs"/>
@@ -192,17 +177,13 @@ returns json
 example:
 
 ```
-{
-    "status": "ok",
-    "data": [
-        [
-            {
-                "id": "[UUID]",
-                "name": "Home Hub"
-            }
-        ]
-    ]
-}
+[
+    {
+        "id": "[UUID]",
+        "name": "Home Hub"
+    }
+]
+
 ```
 
 <a name="hubs/:id"/>
@@ -217,19 +198,14 @@ example:
 
 ```
 {
-    "status": "ok",
-    "data": [
-        {
-            "id": "[UUID]",
-            "name": "Home Hub",
-            "firmwareVersionString": "000.016.00009",
-            "localIP": "[redacted]",
-            "localSrvPortTCP": "39500",
-            "zigbeeEui": "[redacted]",
-            "zigbeeId": "[redacted]",
-            "type": "PHYSICAL"
-        }
-    ]
+    "id": "[UUID]",
+    "name": "Home Hub",
+    "firmwareVersionString": "000.016.00009",
+    "localIP": "[redacted]",
+    "localSrvPortTCP": "39500",
+    "zigbeeEui": "[redacted]",
+    "zigbeeId": "[redacted]",
+    "type": "PHYSICAL"
 }
 ```
 
@@ -243,12 +219,7 @@ returns json
 
 example:
 ```
-{
-    "status": "ok",
-    "data": [
-        "off"
-    ]
-}
+"off"
 ```
 
 <a name="shm/:mode"/>
@@ -263,12 +234,7 @@ returns json
 
 example:
 ```
-{
-    "status": "ok",
-    "data": [
-        "off"
-    ]
-}
+"off"
 ```
 
 <a name="notification"/>
@@ -282,16 +248,20 @@ Send as json:
 id is from endpoint contacts
 method is only valid if address book is not enabled
 
-returns json
-
-example:
-
 ```
 { 
     id: "[uuid]",
     message: "This is a test",
     method: "push"
 }
+```
+
+returns json
+
+example:
+
+```
+"message sent"
 ```
 
 <a name="routines"/>
@@ -304,21 +274,19 @@ returns json
 
 example:
 ```
-{
-    "status": "ok",
-    "data": 
-       [{
-		"id": "[uuid]",
-		"label": "I'm Back!"
-	},  {
-		"id": "[uuid]",
-		"label": "Good Night!"
-	}, {
-		"id": "[uuid]",
-		"label": "Goodbye!"
-	}
-	]
-}
+[
+    {
+        "id": "[uuid]",
+        "label": "I'm Back!"
+    },  {
+        "id": "[uuid]",
+        "label": "Good Night!"
+    }, {
+        "id": "[uuid]",
+        "label": "Goodbye!"
+    }
+]
+
 ```
 
 <a name="routines/:id"/>
@@ -334,13 +302,8 @@ example:
 
 ```
 {
-    "status": "ok",
-    "data": [
-        {
-            "id": "[UUID]",
-            "label": "Good Morning!"
-        }
-    ]
+    "id": "[UUID]",
+    "label": "Good Morning!"
 }
 ```
 
@@ -353,15 +316,10 @@ example:
 
 ```
 {
-    "status": "ok",
-    "data": [
-        {
-            "id": "[UUID]",
-            "label": "Good Morning!",
-            "hasSecureActions": false,
-            "action": "/api/smartapps/installations/[UUID]/action/execute"
-        }
-    ]
+    "id": "[UUID]",
+    "label": "Good Morning!",
+    "hasSecureActions": false,
+    "action": "/api/smartapps/installations/[UUID]/action/execute"
 }
 ```
 
@@ -376,19 +334,17 @@ returns json
 example:
 
 ```
-{
-    "status": "ok",
-    "data": [{
-		"id": "[uuid]",
-		"name": "SmartSense Multi",
-		"displayName": "Theater SmartSense Multi"
-	}, {
-		"id": "[uuid]",
-		"name": "SmartSense Open/Closed Sensor",
-		"displayName": "Front Door SmartSense Open/Closed Sensor"
-	}
-	]
-}
+[
+    {
+    "id": "[uuid]",
+    "name": "SmartSense Multi",
+    "displayName": "Theater SmartSense Multi"
+    }, {
+    "id": "[uuid]",
+    "name": "SmartSense Open/Closed Sensor",
+    "displayName": "Front Door SmartSense Open/Closed Sensor"
+    }
+]
 ```
 
 <a name="devices/:id"/>
@@ -402,30 +358,28 @@ returns json
 example:
 
 ```
+
 {
-    "status": "ok",
-    "data": [
-		{
-		"id": "[uuid]",
-		"name": "SmartSense Multi",
-		"displayName": "Theater SmartSense Multi",
-		"attributes": {
-			"temperature": 68,
-			"battery": 1,
-			"contact": "closed",
-			"threeAxis": {
-				"x": -9,
-				"y": 65,
-				"z": -1020
-			},
-			"acceleration": "inactive",
-			"lqi": 100,
-			"rssi": -46,
-			"status": "closed"
-		}
-	}
-	]
+    "id": "[uuid]",
+    "name": "SmartSense Multi",
+    "displayName": "Theater SmartSense Multi",
+    "attributes": {
+        "temperature": 68,
+        "battery": 1,
+        "contact": "closed",
+        "threeAxis": {
+            "x": -9,
+            "y": 65,
+            "z": -1020
+        },
+        "acceleration": "inactive",
+        "lqi": 100,
+        "rssi": -46,
+        "status": "closed"
+    }
 }
+
+
 ```
 
 <a name="devices/:id/commands"/>
@@ -438,9 +392,7 @@ returns json
 
 example:
 ```
-{
-    "status": "ok",
-    "data": [{
+[{
 		"command": "on",
 		"params": {}
 	}, {
@@ -460,7 +412,7 @@ example:
 		"params": {}
 	}
 	]
-}
+
 ```
 
 <a name="devices/:id/:command"/>
@@ -475,18 +427,13 @@ example:
 
 ```
 {
-    "status": "ok",
-    "data": [
-        {
-            "id": "[UUID]",
-            "name": "ps_Control4_Dimmer_ZigbeeHA",
-            "displayName": "Patrick Office Dimmer",
-            "attributes": {
-                "switch": "off",
-                "level": 0
-            }
-        }
-    ]
+    "id": "[UUID]",
+    "name": "ps_Control4_Dimmer_ZigbeeHA",
+    "displayName": "Patrick Office Dimmer",
+    "attributes": {
+        "switch": "off",
+        "level": 0
+    }
 }
 ```
 
@@ -502,18 +449,13 @@ example:
 
 ```
 {
-    "status": "ok",
-    "data": [
-        {
-            "id": "[UUID]",
-            "name": "ps_Control4_Dimmer_ZigbeeHA",
-            "displayName": "Patrick Office Dimmer",
-            "attributes": {
-                "switch": "off",
-                "level": 0
-            }
-        }
-    ]
+    "id": "[UUID]",
+    "name": "ps_Control4_Dimmer_ZigbeeHA",
+    "displayName": "Patrick Office Dimmer",
+    "attributes": {
+        "switch": "off",
+        "level": 0
+    }
 }
 ```
 
@@ -527,9 +469,8 @@ returns json
 
 example:
 ```
-{
-    "status": "ok",
-    "data": [{
+[
+    {
 		"device_id": "[uuid]",
 		"label": "server room bulb",
 		"name": "switch",
@@ -554,8 +495,7 @@ example:
 		"stateChange": true,
 		"eventSource": "DEVICE"
 	}
-	]
-}
+]
 ```
 
 <a name="devices/commands"/>
@@ -567,10 +507,11 @@ POST a list of device ids, commands and option value for batch Control
 ```
 {   
 	group: [
-    { id:"[UUID]",command:on },
-    { id:"[UUID]",command:off },
-    {id:"[UUID]",command:setLevel,value:100}
-]}
+        { id:"[UUID]",command:on },
+        { id:"[UUID]",command:off },
+        {id:"[UUID]",command:setLevel,value:100}
+    ]
+}
 ```
 
 returns json
@@ -578,51 +519,46 @@ returns json
 example:
 
 ```
-{
-    "status": "ok",
-    "data": [
-        [
+[
+    {
+        "id": "[UUID]",
+        "status": "success",
+        "command": "on",
+        "state": [
             {
                 "id": "[UUID]",
-                "status": "success",
-                "command": "on",
-                "state": [
-                    {
-                        "id": "[UUID]",
-                        "name": "CentraLite Switch",
-                        "displayName": "Patrick Office CentraLite Switch",
-                        "attributes": {
-                            "switch": "on",
-                            "power": 0,
-                            "checkInterval": 720
-                        }
-                    }
-                ]
-            },
-            {
-                "id": "[UUID]",
-                "status": "not found"
-            },
-            {
-                "id": "[UUID]",
-                "status": "success",
-                "command": "setLevel",
-                "value": 100,
-                "state": [
-                    {
-                        "id": "[UUID]",
-                        "name": "ps_Control4_Dimmer_ZigbeeHA",
-                        "displayName": "Patrick Office Dimmer",
-                        "attributes": {
-                            "switch": "on",
-                            "level": 100
-                        }
-                    }
-                ]
+                "name": "CentraLite Switch",
+                "displayName": "Patrick Office CentraLite Switch",
+                "attributes": {
+                    "switch": "on",
+                    "power": 0,
+                    "checkInterval": 720
+                }
             }
         ]
-    ]
-}
+    },
+    {
+        "id": "[UUID]",
+        "status": "not found"
+    },
+    {
+        "id": "[UUID]",
+        "status": "success",
+        "command": "setLevel",
+        "value": 100,
+        "state": [
+            {
+                "id": "[UUID]",
+                "name": "ps_Control4_Dimmer_ZigbeeHA",
+                "displayName": "Patrick Office Dimmer",
+                "attributes": {
+                    "switch": "on",
+                    "level": 100
+                }
+            }
+        ]
+    }
+]
 ```
 
 <a name="updates"/>
@@ -636,9 +572,8 @@ returns json
 example:
 
 ```
-{
-    "status": "ok",
-    "data": [{
+[
+    {
 		"id": "[uuid]",
 		"name": "Deck Door Lock",
 		"value": "locked",
@@ -649,8 +584,7 @@ example:
 		"value": "1",
 		"date": "2016-12-12T02:41:09.906Z"
 	}
-	]
-}
+]
 ```
 
 <a name="allDevices"/>
@@ -715,34 +649,29 @@ returns json
 example:
 
 ```
-{
-    "status": "ok",
-    "data": [
-        [
-            "SmartSense Multi",
-            "SmartSense Multi Sensor",
-            "Hue Bulb",
-            "Hue Lux Bulb",
-            "SmartPower Outlet",
-            "zZ-Wave Schlage Touchscreen Lock",
-            "Z-Wave Plus Window Shade",
-            "Z-Wave Remote",
-            "Aeon Minimote",
-            "Z-Wave Lock Reporting",
-            "zps_Control4_Dimmer_ZigbeeHA",
-            "Z-Wave Metering Switch",
-            "zIris Motion/Temp Sensor",
-            "SmartSense Moisture Sensor",
-            "SmartSense Motion Sensor",
-            "zIris Open/Closed Sensor",
-            "zCentralite Keypad",
-            "SmartSense Open/Closed Sensor",
-            "zLCF Control4 Controller",
-            "zSmartWeather Station Tile HTML",
-            "Samsung SmartCam"
-        ]
-    ]
-}
+[
+    "SmartSense Multi",
+    "SmartSense Multi Sensor",
+    "Hue Bulb",
+    "Hue Lux Bulb",
+    "SmartPower Outlet",
+    "zZ-Wave Schlage Touchscreen Lock",
+    "Z-Wave Plus Window Shade",
+    "Z-Wave Remote",
+    "Aeon Minimote",
+    "Z-Wave Lock Reporting",
+    "zps_Control4_Dimmer_ZigbeeHA",
+    "Z-Wave Metering Switch",
+    "zIris Motion/Temp Sensor",
+    "SmartSense Moisture Sensor",
+    "SmartSense Motion Sensor",
+    "zIris Open/Closed Sensor",
+    "zCentralite Keypad",
+    "SmartSense Open/Closed Sensor",
+    "zLCF Control4 Controller",
+    "zSmartWeather Station Tile HTML",
+    "Samsung SmartCam"
+]
 ```
 
 <a name="weather"/>
@@ -757,99 +686,94 @@ example:
 
 ```
 {
-    "status": "ok",
-    "data": [
-		{
-			"wind_gust_mph": 0,
-			"precip_1hr_metric": " 0",
-			"precip_today_metric": "0",
-			"pressure_trend": "-",
-			"forecast_url": "http://www.wunderground.com/US/MN/Plymouth.html",
-			"history_url": "http://www.wunderground.com/weatherstation/WXDailyHistory.asp?ID=KMNMAPLE23",
-			"alertString": "Winter Storm Warning, Wind Chill Advisory",
-			"estimated": {},
-			"weather": "Mostly Cloudy",
-			"windchill_string": "-11 F (-24 C)",
-			"station_id": "KMNMAPLE23",
-			"aleryKeys": "[\"WIN1481794620\"]",
-			"UV": "0.0",
-			"observation_epoch": "1481812776",
-			"wind_gust_kph": 0,
-			"precip_1hr_in": "0.00",
-			"observation_time": "Last Updated on December 15, 8:39 AM CST",
-			"feelslike_string": "-11 F (-24 C)",
-			"temp_f": -10.7,
-			"local_tz_long": "America/Chicago",
-			"relative_humidity": "49%",
-			"temp_c": -23.7,
-			"image": {
-				"title": "Weather Underground",
-				"link": "http://www.wunderground.com",
-				"url": "http://icons.wxug.com/graphics/wu2/logo_130x80.png"
-			},
-			"solarradiation": "22",
-			"visibility_mi": "10.0",
-			"observation_location": {
-				"full": "Maple Grove, Minnesota",
-				"elevation": "965 ft",
-				"state": "Minnesota",
-				"longitude": "-93.475601",
-				"latitude": "45.067692",
-				"country_iso3166": "US",
-				"country": "US",
-				"city": "Maple Grove"
-			},
-			"illuminance": 9408,
-			"wind_mph": 0.0,
-			"heat_index_c": "NA",
-			"precip_today_string": "0.00 in (0 mm)",
-			"observation_time_rfc822": "Thu, 15 Dec 2016 08:39:36 -0600",
-			"feelslike_f": "-11",
-			"heat_index_f": "NA",
-			"feelslike_c": "-24",
-			"heat_index_string": "NA",
-			"forecastIcon": "mostlycloudy",
-			"ob_url": "http://www.wunderground.com/cgi-bin/findweather/getForecast?query=44.067692,-95.475601",
-			"dewpoint_string": "-25 F (-32 C)",
-			"local_tz_offset": "-0600",
-			"wind_kph": 0,
-			"windchill_f": "-11",
-			"windchill_c": "-24",
-			"wind_degrees": 359,
-			"pressure_in": "30.48",
-			"percentPrecip": "10",
-			"dewpoint_c": -32,
-			"pressure_mb": "1032",
-			"icon": "mostlycloudy",
-			"local_time_rfc822": "Thu, 15 Dec 2016 08:39:51 -0600",
-			"precip_1hr_string": "0.00 in ( 0 mm)",
-			"icon_url": "http://icons.wxug.com/i/c/k/mostlycloudy.gif",
-			"wind_dir": "North",
-			"dewpoint_f": -25,
-			"nowcast": "",
-			"display_location": {
-				"zip": "55446",
-				"magic": "1",
-				"full": "Plymouth, MN",
-				"elevation": "303.9",
-				"state": "MN",
-				"wmo": "99999",
-				"longitude": "-93.500000",
-				"latitude": "45.070000",
-				"state_name": "Minnesota",
-				"country_iso3166": "US",
-				"country": "US",
-				"city": "Plymouth"
-			},
-			"visibility_km": "16.1",
-			"sunset": "4:32 PM",
-			"temperature_string": "-10.7 F (-23.7 C)",
-			"local_tz_short": "CST",
-			"sunrise": "7:46 AM",
-			"local_epoch": "1481812791",
-			"wind_string": "Calm",
-			"precip_today_in": "0.00"
-		}
-	]
+    "wind_gust_mph": 0,
+    "precip_1hr_metric": " 0",
+    "precip_today_metric": "0",
+    "pressure_trend": "-",
+    "forecast_url": "http://www.wunderground.com/US/MN/Plymouth.html",
+    "history_url": "http://www.wunderground.com/weatherstation/WXDailyHistory.asp?ID=KMNMAPLE23",
+    "alertString": "Winter Storm Warning, Wind Chill Advisory",
+    "estimated": {},
+    "weather": "Mostly Cloudy",
+    "windchill_string": "-11 F (-24 C)",
+    "station_id": "KMNMAPLE23",
+    "aleryKeys": "[\"WIN1481794620\"]",
+    "UV": "0.0",
+    "observation_epoch": "1481812776",
+    "wind_gust_kph": 0,
+    "precip_1hr_in": "0.00",
+    "observation_time": "Last Updated on December 15, 8:39 AM CST",
+    "feelslike_string": "-11 F (-24 C)",
+    "temp_f": -10.7,
+    "local_tz_long": "America/Chicago",
+    "relative_humidity": "49%",
+    "temp_c": -23.7,
+    "image": {
+        "title": "Weather Underground",
+        "link": "http://www.wunderground.com",
+        "url": "http://icons.wxug.com/graphics/wu2/logo_130x80.png"
+    },
+    "solarradiation": "22",
+    "visibility_mi": "10.0",
+    "observation_location": {
+        "full": "Maple Grove, Minnesota",
+        "elevation": "965 ft",
+        "state": "Minnesota",
+        "longitude": "-93.475601",
+        "latitude": "45.067692",
+        "country_iso3166": "US",
+        "country": "US",
+        "city": "Maple Grove"
+    },
+    "illuminance": 9408,
+    "wind_mph": 0.0,
+    "heat_index_c": "NA",
+    "precip_today_string": "0.00 in (0 mm)",
+    "observation_time_rfc822": "Thu, 15 Dec 2016 08:39:36 -0600",
+    "feelslike_f": "-11",
+    "heat_index_f": "NA",
+    "feelslike_c": "-24",
+    "heat_index_string": "NA",
+    "forecastIcon": "mostlycloudy",
+    "ob_url": "http://www.wunderground.com/cgi-bin/findweather/getForecast?query=44.067692,-95.475601",
+    "dewpoint_string": "-25 F (-32 C)",
+    "local_tz_offset": "-0600",
+    "wind_kph": 0,
+    "windchill_f": "-11",
+    "windchill_c": "-24",
+    "wind_degrees": 359,
+    "pressure_in": "30.48",
+    "percentPrecip": "10",
+    "dewpoint_c": -32,
+    "pressure_mb": "1032",
+    "icon": "mostlycloudy",
+    "local_time_rfc822": "Thu, 15 Dec 2016 08:39:51 -0600",
+    "precip_1hr_string": "0.00 in ( 0 mm)",
+    "icon_url": "http://icons.wxug.com/i/c/k/mostlycloudy.gif",
+    "wind_dir": "North",
+    "dewpoint_f": -25,
+    "nowcast": "",
+    "display_location": {
+        "zip": "55446",
+        "magic": "1",
+        "full": "Plymouth, MN",
+        "elevation": "303.9",
+        "state": "MN",
+        "wmo": "99999",
+        "longitude": "-93.500000",
+        "latitude": "45.070000",
+        "state_name": "Minnesota",
+        "country_iso3166": "US",
+        "country": "US",
+        "city": "Plymouth"
+    },
+    "visibility_km": "16.1",
+    "sunset": "4:32 PM",
+    "temperature_string": "-10.7 F (-23.7 C)",
+    "local_tz_short": "CST",
+    "sunrise": "7:46 AM",
+    "local_epoch": "1481812791",
+    "wind_string": "Calm",
+    "precip_today_in": "0.00"
 }
 ```

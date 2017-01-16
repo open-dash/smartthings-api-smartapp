@@ -219,7 +219,7 @@ def getSHMStatus() {
 	debug("getSHMStatus called")
     def alarmSystemStatus = "${location?.currentState("alarmSystemStatus").stringValue}"
     debug("SHM Status is " + alarmSystemStatus)
-    render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[alarmSystemStatus]]).toPrettyString()
+    render contentType: "text/json", data: new JsonBuilder(alarmSystemStatus).toPrettyString()
 }
 
 /**
@@ -235,7 +235,7 @@ def setSHMMode() {
     if(mode) {
         debug("Setting SHM to $status in location: $location.name")
         sendLocationEvent(name: "alarmSystemStatus", value: status)
-        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[status]]).toPrettyString()
+        render contentType: "text/json", data: new JsonBuilder(status).toPrettyString()
     } else {
         httpError(404, "mode not found")
     }
@@ -269,7 +269,7 @@ def listLocation() {
     result << ["hubs" : hubs]
     debug("Returning LOCATION: $result")
     //result
-    render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[result]]).toPrettyString()
+    render contentType: "text/json", data: new JsonBuilder(result).toPrettyString()
 }
 
 /****************************
@@ -291,7 +291,7 @@ def listContacts() {
         contact << [contact: contactDetails]
         results << contact
     }
-    render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[results]]).toPrettyString()    
+    render contentType: "text/json", data: new JsonBuilder(results).toPrettyString()    
 }
 
 /****************************
@@ -310,7 +310,7 @@ def listHubs() {
         result << getHub(it)
     }
     debug("Returning HUBS: $result")
-    render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[result]]).toPrettyString()    
+    render contentType: "text/json", data: new JsonBuilder(result).toPrettyString()    
 }
 
 /**
@@ -336,7 +336,7 @@ def getHubDetail() {
         result << ["type" : hub.type as String]
 
         debug("Returning HUB: $result")
-        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[result]]).toPrettyString()
+        render contentType: "text/json", data: new JsonBuilder(result).toPrettyString()
     }
 }
 
@@ -374,7 +374,7 @@ def sendNotification() {
         }         
     }
     debug("In Notifications " + id)
-    render contentType: "text/json", data: new JsonBuilder([status: "ok", data:["message sent"]]).toPrettyString()
+    render contentType: "text/json", data: new JsonBuilder("message sent").toPrettyString()
 }
 
 /****************************
@@ -404,7 +404,7 @@ def listModes() {
             result << getMode(it)
         }
         debug("Returning MODES: $result")
-        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[result]]).toPrettyString()
+        render contentType: "text/json", data: new JsonBuilder(result).toPrettyString()
     }
 }
 
@@ -421,7 +421,7 @@ def switchMode() {
     if(mode) {
         debug("Setting mode to $mode.name in location: $location.name")
         location.setMode(mode.name)
-        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[mode.name]]).toPrettyString()
+        render contentType: "text/json", data: new JsonBuilder(mode.name).toPrettyString()
     } else {
         httpError(404, "mode not found")
     }
@@ -448,14 +448,14 @@ def listRoutines() {
         if(!routine) {
             httpError(404, "Routine not found")
         } else {
-            render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[getRoutine(routine)]]).toPrettyString()            
+            render contentType: "text/json", data: new JsonBuilder(getRoutine(routine)).toPrettyString()            
         }
     } else {
         location.helloHome?.getPhrases().each { routine ->
             results << getRoutine(routine)
         }
         debug("Returning ROUTINES: $results")
-        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[results]]).toPrettyString()
+        render contentType: "text/json", data: new JsonBuilder(results).toPrettyString()
     }
 }
 
@@ -474,7 +474,7 @@ def executeRoutine() {
     } else {
         debug("Executing Routine: $routine.label in location: $location.name")
         location.helloHome?.execute(routine.label)
-        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[routine]]).toPrettyString()
+        render contentType: "text/json", data: new JsonBuilder(routine).toPrettyString()
     }
 }
 
@@ -494,11 +494,11 @@ def listDevices() {
     // if there is an id parameter, list only that device. Otherwise list all devices in location
     if(id) {
         def device = findDevice(id)    
-        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[deviceItem(device, true)]]).toPrettyString()
+        render contentType: "text/json", data: new JsonBuilder(deviceItem(device, true)).toPrettyString()
     } else {
         def result = []
         result << allSubscribed.collect{deviceItem(it, false)}                
-        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[result[0]]]).toPrettyString()
+        render contentType: "text/json", data: new JsonBuilder(result[0]).toPrettyString()
     }
 }
 
@@ -519,7 +519,7 @@ def listDeviceEvents() {
     } else {
         def events = device.events(max: numEvents)
         def result = events.collect{item(device, it)}
-        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[result]]).toPrettyString()
+        render contentType: "text/json", data: new JsonBuilder(result).toPrettyString()
     }
 }
 
@@ -541,7 +541,7 @@ def listDeviceCommands() {
             result << ["command" : it.name, "params"  : [:]]
         }
     }
-    render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[result]]).toPrettyString()
+    render contentType: "text/json", data: new JsonBuilder(result).toPrettyString()
 }
 
 /**
@@ -573,7 +573,7 @@ def sendDevicesCommands() {
             results << [ id : it.id, status : "not found" ]
         }
     }
-    render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[results]]).toPrettyString()
+    render contentType: "text/json", data: new JsonBuilder(results).toPrettyString()
 }
 /**
 * Executes Supported Command for a Device
@@ -599,7 +599,7 @@ def sendDeviceCommand() {
         httpError(404, "Device not found")
     } else {
         debug("Executing command: $command on device: $device.displayName")
-        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[deviceItem(device, true)]]).toPrettyString()
+        render contentType: "text/json", data: new JsonBuilder(deviceItem(device, true)).toPrettyString()
     }
 }
 
@@ -624,7 +624,7 @@ def sendDeviceCommandSecondary() {
         httpError(404, "Device not found")
     } else {
         debug("Executing with secondary command: $command $secondary on device: $device.displayName")
-        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[deviceItem(device, true)]]).toPrettyString()
+        render contentType: "text/json", data: new JsonBuilder(deviceItem(device, true)).toPrettyString()
     }
 }
 
@@ -636,7 +636,7 @@ def sendDeviceCommandSecondary() {
 def updates() {
 	debug("updates called")
     //render out json of all updates since last html loaded
-    render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[state.updates]]).toPrettyString()
+    render contentType: "text/json", data: new JsonBuilder(state.updates).toPrettyString()
 }
 
 /**
@@ -684,7 +684,7 @@ def listDeviceTypes() {
             }
         } 
     }
-    render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[deviceData]]).toPrettyString()
+    render contentType: "text/json", data: new JsonBuilder(deviceData).toPrettyString()
 }
 
 /**
@@ -759,7 +759,7 @@ def getWeather() {
     }
     debug(obs)
     if (obs) {
-        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[obs]]).toPrettyString()
+        render contentType: "text/json", data: new JsonBuilder(obs).toPrettyString()
     }
 }
 

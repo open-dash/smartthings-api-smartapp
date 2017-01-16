@@ -986,11 +986,21 @@ private deviceItem(device, explodedView) {
     }
 
     if(explodedView) {
-        def attrsAndVals = [:]
+        def attrsAndVals = []
         device.supportedAttributes?.each {
-            attrsAndVals << [(it.name) : device.currentValue(it.name)]
+        	def attribs = ["name" : (it.name), "currentValue" : device.currentValue(it.name), "dataType" : it.dataType]
+            
+            if(it.values) {
+                	def vals = []
+                    it.values.each { v ->
+                    	vals << v
+                    }
+                    attribs << [ "values" : vals]
+                }
+                attrsAndVals << attribs
         }
         results << ["attributes" : attrsAndVals]
+        
         def caps = []
         device.capabilities?.each {
             caps << it.name 

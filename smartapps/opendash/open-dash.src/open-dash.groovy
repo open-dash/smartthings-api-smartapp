@@ -763,6 +763,28 @@ def getWeather() {
     }
 }
 
+/**
+* Handles the subscribed event and updates state variable
+*
+* @param evt is the event object
+*/
+def eventHandler(evt) {
+	debug("eventHandler called")
+    //send to webhook api
+    logField(evt) { it.toString() }
+
+    def js = eventJson(evt) //.inspect().toString()
+    if (!state.updates) state.updates = []
+    def x = state.updates.findAll { js.id == it.id }
+
+    if(x) {
+        for(i in x) {
+            state.updates.remove(i) 
+        }
+    }
+    state.updates << js
+}
+
 /****************************
 * Private Methods
 ****************************/
@@ -790,28 +812,6 @@ private getHub(hub, explodedView = false) {
     }
     debug("Returning HUB: $result")
     result
-}
-
-/**
-* Handles the subscribed event and updates state variable
-*
-* @param evt is the event object
-*/
-def eventHandler(evt) {
-	debug("eventHandler called")
-    //send to webhook api
-    logField(evt) { it.toString() }
-
-    def js = eventJson(evt) //.inspect().toString()
-    if (!state.updates) state.updates = []
-    def x = state.updates.findAll { js.id == it.id }
-
-    if(x) {
-        for(i in x) {
-            state.updates.remove(i) 
-        }
-    }
-    state.updates << js
 }
 
 /**

@@ -135,10 +135,13 @@ private def getApprovedCommands() {
 }
 
 preferences {
-    section("Allow Endpoint to Control These Things by Their Capabilities (You only need to choose one capability to get access to full device, however, selecting all capabilities will not create duplicate devices...") {
-        for (cap in capabilities) {
-            input cap[2], cap[0], title: "Select ${cap[1]} Devices", multiple:true, required: false
-        }
+    section("About Open-Dash") {
+        href(name: "hrefNotRequired",
+             title: "About Open-Dash",
+             required: false,
+             style: "external",
+             url: "https://open-dash.com/about/",
+             description: "Tap to view the Open-Dash website in mobile browser")
     }
     section("Send Notifications?") {
         input("recipients", "contact", title: "Send notifications to") {
@@ -146,6 +149,15 @@ preferences {
                 description: "Phone Number", required: false
         }
     }
+    section("Enable Logging") {
+        input("logging", "bool", title: "Enable Logging for debugging", required: false, default:false) 
+    }
+    section("Allow Endpoint to Control These Things by Their Capabilities (You only need to choose one capability to get access to full device, however, selecting all capabilities will not create duplicate devices...") {
+        for (cap in capabilities) {
+            input cap[2], cap[0], title: "Select ${cap[1]} Devices", multiple:true, required: false
+        }
+    }
+
 }
 
 def installed() {
@@ -529,7 +541,7 @@ def sendDevicesCommands() {
         if(device) {
             if(!it.value) {
                 if (approvedCommands.contains(it.command)) {
-                	log.debug "Sending command ${it.command} to Device id ${it.id}" 
+                    log.debug "Sending command ${it.command} to Device id ${it.id}" 
                     device."$it.command"()  
                     results << [ id : it.id, status : "success", command : it.command, state: [deviceItem(device, true)] ]
                 }
@@ -545,442 +557,442 @@ def sendDevicesCommands() {
     }
     render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[results]]).toPrettyString()
 }
-    /**
+/**
 * Executes Supported Command for a Device
 *
 * @param params.ids is the device id, params.command is the command to send
 * @return renders json
 */
-    def sendDeviceCommand() {
-        def id = params.id
-        def device = findDevice(id) 
-        def command = params.command
-        def secondary_command = params.level
-        if (approvedCommands.contains(command)) {
-            device."$command"()  
-        } else  {
-            httpError(404, "Command not found")
-        }
-        if(!command) {
-            httpError(404, "Device not found")
-        }
-        if(!device) {
-            httpError(404, "Device not found")
-        } else {
-            log.debug "Executing command: $command on device: $device.displayName"
-            render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[deviceItem(device, true)]]).toPrettyString()
-        }
+def sendDeviceCommand() {
+    def id = params.id
+    def device = findDevice(id) 
+    def command = params.command
+    def secondary_command = params.level
+    if (approvedCommands.contains(command)) {
+        device."$command"()  
+    } else  {
+        httpError(404, "Command not found")
     }
+    if(!command) {
+        httpError(404, "Device not found")
+    }
+    if(!device) {
+        httpError(404, "Device not found")
+    } else {
+        log.debug "Executing command: $command on device: $device.displayName"
+        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[deviceItem(device, true)]]).toPrettyString()
+    }
+}
 
-    /**
+/**
 * Executes Supported Command with secondary parameter for a Device
 *
 * @param params.ids is the device id, params.command is the command to send, params.command is the value for secondary command
 * @return renders json
 */
-    def sendDeviceCommandSecondary() {
-        def id = params.id
-        def device = findDevice(id) 
-        def command = params.command
-        def secondary = params.secondary.toInteger()
+def sendDeviceCommandSecondary() {
+    def id = params.id
+    def device = findDevice(id) 
+    def command = params.command
+    def secondary = params.secondary.toInteger()
 
-        device."$command"(secondary)
-        if(!command) {
-            httpError(404, "Device not found")
-        }
-        if(!device) {
-            httpError(404, "Device not found")
-        } else {
-            log.debug "Executing with secondary command: $command $secondary on device: $device.displayName"
-            render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[deviceItem(device, true)]]).toPrettyString()
-        }
+    device."$command"(secondary)
+    if(!command) {
+        httpError(404, "Device not found")
     }
+    if(!device) {
+        httpError(404, "Device not found")
+    } else {
+        log.debug "Executing with secondary command: $command $secondary on device: $device.displayName"
+        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[deviceItem(device, true)]]).toPrettyString()
+    }
+}
 
-    /**
+/**
 * Get the updates from state variable and returns them
 *
 * @return renders json
 */
-    def updates() {
-        //render out json of all updates since last html loaded
-        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[state.updates]]).toPrettyString()
-    }
+def updates() {
+    //render out json of all updates since last html loaded
+    render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[state.updates]]).toPrettyString()
+}
 
-    /**
+/**
 * Builds a map of all unique devices
 *
 * @return renders json
 */
-    def allDevices() {
-        def allAttributes = []
+def allDevices() {
+    def allAttributes = []
 
-        allSubscribed.each {
-            it.collect{ i ->
-                def deviceData = [:]
+    allSubscribed.each {
+        it.collect{ i ->
+            def deviceData = [:]
 
-                deviceData << [name: i?.displayName, label: i?.name, type: i?.typeName, id: i?.id, date: i?.events()[0]?.date, model: i?.modelName, manufacturer: i?.manufacturerName ]
-                def attributes = [:]
-                i.supportedAttributes.each {
-                    attributes << [(it.toString()) : i.currentState(it.toString())?.value]
-                }
-                deviceData << [ "attributes" : attributes ]
-                def cmds = []
-                i.supportedCommands?.each {
-                    cmds << ["command" : it.name ]
-                }
-                deviceData << [ "commands" : cmds ] //i.supportedCommands.toString() ]  //TODO fix this to parse to an object
-                allAttributes << deviceData
+            deviceData << [name: i?.displayName, label: i?.name, type: i?.typeName, id: i?.id, date: i?.events()[0]?.date, model: i?.modelName, manufacturer: i?.manufacturerName ]
+            def attributes = [:]
+            i.supportedAttributes.each {
+                attributes << [(it.toString()) : i.currentState(it.toString())?.value]
             }
+            deviceData << [ "attributes" : attributes ]
+            def cmds = []
+            i.supportedCommands?.each {
+                cmds << ["command" : it.name ]
+            }
+            deviceData << [ "commands" : cmds ] //i.supportedCommands.toString() ]  //TODO fix this to parse to an object
+            allAttributes << deviceData
         }
-        render contentType: "text/json", data: new JsonBuilder(allAttributes).toPrettyString()
     }
+    render contentType: "text/json", data: new JsonBuilder(allAttributes).toPrettyString()
+}
 
-    /**
+/**
 * Builds a map of all unique devicesTypes
 *
 * @return renders json
 */
-    def listDeviceTypes() {
-        def deviceData = []
-        allSubscribed?.each {
-            it.collect{ i ->    
-                if (!deviceData.contains(i?.typeName)) {
-                    deviceData << i?.typeName  
-                }
-            } 
-        }
-        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[deviceData]]).toPrettyString()
+def listDeviceTypes() {
+    def deviceData = []
+    allSubscribed?.each {
+        it.collect{ i ->    
+            if (!deviceData.contains(i?.typeName)) {
+                deviceData << i?.typeName  
+            }
+        } 
     }
+    render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[deviceData]]).toPrettyString()
+}
 
-    /**
+/**
 * Builds a map of useful weather data
 *
 * @return renders json
 */
-    def getWeather() {
-        // Current conditions
-        def obs = get("conditions")?.current_observation
+def getWeather() {
+    // Current conditions
+    def obs = get("conditions")?.current_observation
 
-        // Sunrise / sunset
-        def a = get("astronomy")?.moon_phase
-        def today = localDate("GMT${obs.local_tz_offset}")
-        def ltf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm")
-        ltf.setTimeZone(TimeZone.getTimeZone("GMT${obs.local_tz_offset}"))
-        def utf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-        utf.setTimeZone(TimeZone.getTimeZone("GMT"))
+    // Sunrise / sunset
+    def a = get("astronomy")?.moon_phase
+    def today = localDate("GMT${obs.local_tz_offset}")
+    def ltf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm")
+    ltf.setTimeZone(TimeZone.getTimeZone("GMT${obs.local_tz_offset}"))
+    def utf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+    utf.setTimeZone(TimeZone.getTimeZone("GMT"))
 
-        def sunriseDate = ltf.parse("${today} ${a.sunrise.hour}:${a.sunrise.minute}")
-        def sunsetDate = ltf.parse("${today} ${a.sunset.hour}:${a.sunset.minute}")
+    def sunriseDate = ltf.parse("${today} ${a.sunrise.hour}:${a.sunrise.minute}")
+    def sunsetDate = ltf.parse("${today} ${a.sunset.hour}:${a.sunset.minute}")
 
-        def tf = new java.text.SimpleDateFormat("h:mm a")
-        tf.setTimeZone(TimeZone.getTimeZone("GMT${obs.local_tz_offset}"))
-        def localSunrise = "${tf.format(sunriseDate)}"
-        def localSunset = "${tf.format(sunsetDate)}"
-        obs << [ sunrise : localSunrise ]
-        obs << [ sunset : localSunset ]
+    def tf = new java.text.SimpleDateFormat("h:mm a")
+    tf.setTimeZone(TimeZone.getTimeZone("GMT${obs.local_tz_offset}"))
+    def localSunrise = "${tf.format(sunriseDate)}"
+    def localSunset = "${tf.format(sunsetDate)}"
+    obs << [ sunrise : localSunrise ]
+    obs << [ sunset : localSunset ]
 
-        // Forecast
-        def f = get("forecast")
-        def f1= f?.forecast?.simpleforecast?.forecastday
-        if (f1) {
-            def icon = f1[0].icon_url.split("/")[-1].split("\\.")[0]
-            def value = f1[0].pop as String // as String because of bug in determining state change of 0 numbers
-            obs << [ percentPrecip : value ]
-            obs << [ forecastIcon : icon ]
+    // Forecast
+    def f = get("forecast")
+    def f1= f?.forecast?.simpleforecast?.forecastday
+    if (f1) {
+        def icon = f1[0].icon_url.split("/")[-1].split("\\.")[0]
+        def value = f1[0].pop as String // as String because of bug in determining state change of 0 numbers
+        obs << [ percentPrecip : value ]
+        obs << [ forecastIcon : icon ]
+    }
+    else {
+        log.warn "Forecast not found"
+    }
+    obs << [ illuminance : estimateLux(sunriseDate, sunsetDate, weatherIcon) ]
+    // Alerts
+    def alerts = get("alerts")?.alerts
+    def newKeys = alerts?.collect{it.type + it.date_epoch} ?: []
+    log.debug "WUSTATION: newKeys: $newKeys"
+    def oldKeys = state.alertKeys?.jsonValue
+    log.debug "WUSTATION: oldKeys: $oldKeys"
+
+    def noneString = "no current weather alerts"
+    if (!newKeys && oldKeys == null) {
+        obs << [alertKeys : newKeys.encodeAsJSON()]
+        obs << [alertString : noneString]
+    }
+    else if (newKeys != oldKeys) {
+        if (oldKeys == null) {
+            oldKeys = []
         }
-        else {
-            log.warn "Forecast not found"
-        }
-        obs << [ illuminance : estimateLux(sunriseDate, sunsetDate, weatherIcon) ]
-        // Alerts
-        def alerts = get("alerts")?.alerts
-        def newKeys = alerts?.collect{it.type + it.date_epoch} ?: []
-        log.debug "WUSTATION: newKeys: $newKeys"
-        def oldKeys = state.alertKeys?.jsonValue
-        log.debug "WUSTATION: oldKeys: $oldKeys"
-
-        def noneString = "no current weather alerts"
-        if (!newKeys && oldKeys == null) {
-            obs << [alertKeys : newKeys.encodeAsJSON()]
-            obs << [alertString : noneString]
-        }
-        else if (newKeys != oldKeys) {
-            if (oldKeys == null) {
-                oldKeys = []
-            }
-            //send(name: "alertKeys", value: newKeys.encodeAsJSON(), displayed: false)
-            obs << [aleryKeys : newKeys.encodeAsJSON() ]
-            def newAlerts = false
-            alerts.each {alert ->
-                if (!oldKeys.contains(alert.type + alert.date_epoch)) {
-                    def msg = "${alert.description} from ${alert.date} until ${alert.expires}"
-                    obs << [ alertString : alert.description ]
-                    newAlerts = true
-                }
-            }
-
-            if (!newAlerts && device.currentValue("alert") != noneString) {
-                obs << [ alertString : noneString ]
+        //send(name: "alertKeys", value: newKeys.encodeAsJSON(), displayed: false)
+        obs << [aleryKeys : newKeys.encodeAsJSON() ]
+        def newAlerts = false
+        alerts.each {alert ->
+            if (!oldKeys.contains(alert.type + alert.date_epoch)) {
+                def msg = "${alert.description} from ${alert.date} until ${alert.expires}"
+                obs << [ alertString : alert.description ]
+                newAlerts = true
             }
         }
-        log.debug obs
-        if (obs) {
-            render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[obs]]).toPrettyString()
+
+        if (!newAlerts && device.currentValue("alert") != noneString) {
+            obs << [ alertString : noneString ]
         }
     }
+    log.debug obs
+    if (obs) {
+        render contentType: "text/json", data: new JsonBuilder([status: "ok", data:[obs]]).toPrettyString()
+    }
+}
 
-    /****************************
+/****************************
 * Private Methods
 ****************************/
 
-    /**
+/**
 * Builds a map of hub details
 *
 * @param hub id (optional), explodedView to show details
 * @return a map of hub
 */
-    private getHub(hub, explodedView = false) {
-        def result = [:]
-        //put the id and name into the result
-        ["id", "name"].each {
-            result << [(it) : hub."$it"]
-        }
-
-        // if we want detailed information about this hub
-        if(explodedView) {
-            ["firmwareVersionString", "localIP", "localSrvPortTCP", "zigbeeEui", "zigbeeId"].each {
-                result << [(it) : hub."$it"]
-            }
-            result << ["type" : hub.type as String]
-        }
-        log.debug "Returning HUB: $result"
-        result
+private getHub(hub, explodedView = false) {
+    def result = [:]
+    //put the id and name into the result
+    ["id", "name"].each {
+        result << [(it) : hub."$it"]
     }
 
-    /**
+    // if we want detailed information about this hub
+    if(explodedView) {
+        ["firmwareVersionString", "localIP", "localSrvPortTCP", "zigbeeEui", "zigbeeId"].each {
+            result << [(it) : hub."$it"]
+        }
+        result << ["type" : hub.type as String]
+    }
+    log.debug "Returning HUB: $result"
+    result
+}
+
+/**
 * Handles the subscribed event and updates state variable
 *
 * @param evt is the event object
 */
-    private handleEvent(evt) {
+private handleEvent(evt) {
 
-        //send to webhook api
-        logField(evt) { it.toString() }
+    //send to webhook api
+    logField(evt) { it.toString() }
 
-        def js = eventJson(evt) //.inspect().toString()
-        if (!state.updates) state.updates = []
-        def x = state.updates.findAll { js.id == it.id }
+    def js = eventJson(evt) //.inspect().toString()
+    if (!state.updates) state.updates = []
+    def x = state.updates.findAll { js.id == it.id }
 
-        if(x) {
-            for(i in x) {
-                state.updates.remove(i) 
-            }
+    if(x) {
+        for(i in x) {
+            state.updates.remove(i) 
         }
-        state.updates << js
     }
+    state.updates << js
+}
 
-    /**
+/**
 * WebHook API Call on Subscribed Change 
 *
 * @param evt is the event object, c is a Closure
 */
-    private logField(evt, Closure c) {
-        //log.debug "The souce of this event is ${evt.source} and it was ${evt.id}"
-        //TODO Use ASYNCHTTP Model instead
-        //httpPostJson(uri: "#####SEND EVENTS TO YOUR ENDPOINT######",   body:[source: "smart_things", device: evt.deviceId, eventType: evt.name, value: evt.value, event_date: evt.isoDate, units: evt.unit, event_source: evt.source, state_changed: evt.isStateChange()]) {
-        //    log.debug evt.name+" Event data successfully posted"
-        //}
-    }
+private logField(evt, Closure c) {
+    //log.debug "The souce of this event is ${evt.source} and it was ${evt.id}"
+    //TODO Use ASYNCHTTP Model instead
+    //httpPostJson(uri: "#####SEND EVENTS TO YOUR ENDPOINT######",   body:[source: "smart_things", device: evt.deviceId, eventType: evt.name, value: evt.value, event_date: evt.isoDate, units: evt.unit, event_source: evt.source, state_changed: evt.isStateChange()]) {
+    //    log.debug evt.name+" Event data successfully posted"
+    //}
+}
 
-    /**
+/**
 * Builds a map of all subscribed devices and returns a unique list of devices
 *
 * @return returns a unique list of devices
 */
-    private getAllSubscribed() {
-        def dev_list = []
-        capabilities.each { 
-            dev_list << settings[it[2]] 
-        }
-        return dev_list?.findAll()?.flatten().unique { it.id }
+private getAllSubscribed() {
+    def dev_list = []
+    capabilities.each { 
+        dev_list << settings[it[2]] 
     }
+    return dev_list?.findAll()?.flatten().unique { it.id }
+}
 
-    /**
+/**
 * finds a device by id in subscribed capabilities
 *
 * @param id is a device uuid
 * @return device object
 */
-    def findDevice(id) {
-        def device = null
-        capabilities.find { 
-            settings[it[2]].find { d ->
-                //log.debug id + " : " + d.id
-                if (d.id == id) {
-                    device = d
-                    return true
-                }
-
+def findDevice(id) {
+    def device = null
+    capabilities.find { 
+        settings[it[2]].find { d ->
+            //log.debug id + " : " + d.id
+            if (d.id == id) {
+                device = d
+                return true
             }
-        }
-        return device
-    }
 
-    /**
+        }
+    }
+    return device
+}
+
+/**
 * Builds a map of device items
 *
 * @param device object and s true/false
 * @return a map of device details
 */
-    private item(device, s) {
-        device && s ? [device_id: device.id, 
-                       label: device.displayName, 
-                       name: s.name, value: s.value, 
-                       date: s.date, stateChange: s.stateChange, 
-                       eventSource: s.eventSource] : null
-    }
+private item(device, s) {
+    device && s ? [device_id: device.id, 
+                   label: device.displayName, 
+                   name: s.name, value: s.value, 
+                   date: s.date, stateChange: s.stateChange, 
+                   eventSource: s.eventSource] : null
+}
 
-    /**
+/**
 * gets Routine information
 *
 * @param routine object
 * @return a map of routine information
 */
-    private getRoutine(routine) {
-        def result = [:]
-        ["id", "label"].each {
-            result << [(it) : routine."$it"]
-        }
-        result
+private getRoutine(routine) {
+    def result = [:]
+    ["id", "label"].each {
+        result << [(it) : routine."$it"]
     }
+    result
+}
 
-    /**
+/**
 * gets mode information
 *
 * @param mode object
 * @return a map of mode information
 */
-    private getMode(mode, explodedView = false) {
-        def result = [:]
-        ["id", "name"].each {
-            result << [(it) : mode."$it"]
-        }
-
-        if(explodedView) {
-            ["locationId"].each {
-                result << [(it) : mode."$it"]
-            }
-        }
-        result
+private getMode(mode, explodedView = false) {
+    def result = [:]
+    ["id", "name"].each {
+        result << [(it) : mode."$it"]
     }
 
-    /**
+    if(explodedView) {
+        ["locationId"].each {
+            result << [(it) : mode."$it"]
+        }
+    }
+    result
+}
+
+/**
 * Builds a map of device details including attributes
 *
 * @param device is the device object, explodedView is true/false
 * @return device details
 */
-    private deviceItem(device, explodedView) {
-        if (!device) return null
-        def results = [:]
-        ["id", "name", "displayName"].each {
-            results << [(it) : device."$it"]
-        }
-
-        if(explodedView) {
-            def attrsAndVals = [:]
-            device.supportedAttributes?.each {
-                attrsAndVals << [(it.name) : device.currentValue(it.name)]
-            }
-
-            results << ["attributes" : attrsAndVals]
-        }
-        results
+private deviceItem(device, explodedView) {
+    if (!device) return null
+    def results = [:]
+    ["id", "name", "displayName"].each {
+        results << [(it) : device."$it"]
     }
 
-    /**
+    if(explodedView) {
+        def attrsAndVals = [:]
+        device.supportedAttributes?.each {
+            attrsAndVals << [(it.name) : device.currentValue(it.name)]
+        }
+
+        results << ["attributes" : attrsAndVals]
+    }
+    results
+}
+
+/**
 * Builds a map of event details based on event
 *
 * @param evt is the event object
 * @return a map of event details
 */
-    private eventJson(evt) {
-        def update = [:]
-        update.id = evt.deviceId
-        update.name = evt.name
-        update.value = evt.value
-        update.name = evt.displayName
-        update.date = evt.isoDate
-        return update
-    }
+private eventJson(evt) {
+    def update = [:]
+    update.id = evt.deviceId
+    update.name = evt.name
+    update.value = evt.value
+    update.name = evt.displayName
+    update.date = evt.isoDate
+    return update
+}
 
-    /**
+/**
 * Gets the weather feature based on location / zipcode
 *
 * @param feature is the weather parameter to get
 * @return weather information
 */
-    private get(feature) {
-        getWeatherFeature(feature, zipCode)
-    }
+private get(feature) {
+    getWeatherFeature(feature, zipCode)
+}
 
-    /**
+/**
 * Gets local Date based on TimeZone
 *
 * @param timeZone
 * @return date
 */
-    private localDate(timeZone) {
-        def df = new java.text.SimpleDateFormat("yyyy-MM-dd")
-        df.setTimeZone(TimeZone.getTimeZone(timeZone))
-        df.format(new Date())
-    }
+private localDate(timeZone) {
+    def df = new java.text.SimpleDateFormat("yyyy-MM-dd")
+    df.setTimeZone(TimeZone.getTimeZone(timeZone))
+    df.format(new Date())
+}
 
-    /**
+/**
 * Estimates current light level (LUX) based on weather info
 *
 * @param sunriseDate is day of sunrise, sunsetDate is day of sunset, weatherIcon is a string
 * @return estimated lux value
 */
-    private estimateLux(sunriseDate, sunsetDate, weatherIcon) {
-        def lux = 0
-        def now = new Date().time
-        if (now > sunriseDate.time && now < sunsetDate.time) {
-            //day
-            switch(weatherIcon) {
-                case 'tstorms':
-                lux = 200
-                break
-                case ['cloudy', 'fog', 'rain', 'sleet', 'snow', 'flurries', 'chanceflurries', 'chancerain', 'chancesleet', 'chancesnow', 'chancetstorms']:
-                lux = 1000
-                break
-                case 'mostlycloudy':
-                lux = 2500
-                break
-                case ['partlysunny', 'partlycloudy', 'hazy']:
-                lux = 7500
-                break
-                default:
-                    //sunny, clear
-                    lux = 10000
-            }
-            //adjust for dusk/dawn
-            def afterSunrise = now - sunriseDate.time
-            def beforeSunset = sunsetDate.time - now
-            def oneHour = 1000 * 60 * 60
+private estimateLux(sunriseDate, sunsetDate, weatherIcon) {
+    def lux = 0
+    def now = new Date().time
+    if (now > sunriseDate.time && now < sunsetDate.time) {
+        //day
+        switch(weatherIcon) {
+            case 'tstorms':
+            lux = 200
+            break
+            case ['cloudy', 'fog', 'rain', 'sleet', 'snow', 'flurries', 'chanceflurries', 'chancerain', 'chancesleet', 'chancesnow', 'chancetstorms']:
+            lux = 1000
+            break
+            case 'mostlycloudy':
+            lux = 2500
+            break
+            case ['partlysunny', 'partlycloudy', 'hazy']:
+            lux = 7500
+            break
+            default:
+                //sunny, clear
+                lux = 10000
+        }
+        //adjust for dusk/dawn
+        def afterSunrise = now - sunriseDate.time
+        def beforeSunset = sunsetDate.time - now
+        def oneHour = 1000 * 60 * 60
 
-            if(afterSunrise < oneHour) {
-                //dawn
-                lux = (long)(lux * (afterSunrise/oneHour))
-            } else if (beforeSunset < oneHour) {
-                //dusk
-                lux = (long)(lux * (beforeSunset/oneHour))
-            }
+        if(afterSunrise < oneHour) {
+            //dawn
+            lux = (long)(lux * (afterSunrise/oneHour))
+        } else if (beforeSunset < oneHour) {
+            //dusk
+            lux = (long)(lux * (beforeSunset/oneHour))
         }
-        else {
-            //night - always set to 10 for now
-            //could do calculations for dusk/dawn too
-            lux = 10
-        }
-        lux
     }
+    else {
+        //night - always set to 10 for now
+        //could do calculations for dusk/dawn too
+        lux = 10
+    }
+    lux
+}

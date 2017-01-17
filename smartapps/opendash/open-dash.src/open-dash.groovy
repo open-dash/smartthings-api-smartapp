@@ -1,5 +1,5 @@
 /**
-*  Copyright 2016 Open-Dash.com
+*  Copyright 2017 Open-Dash.com
 *
 *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 *  in compliance with the License. You may obtain a copy of the License at:
@@ -64,6 +64,7 @@ mappings {
     path("/allDevices") 						{   action: [   GET: "allDevices"        														]}
     path("/deviceTypes")						{	action: [ 	GET: "listDeviceTypes" 															]}
     path("/weather")							{	action: [ 	GET: "getWeather" 																]}
+    path("/webhook/:option")					{	action: [ 	GET: "getWebhook" 																]}
 }
 
 // our capabilities list
@@ -183,6 +184,7 @@ def initialize() {
     debug("Initialize called")
     //init updates state var if null
     if (!state.updates) state.updates = []
+    if (!state.webhook) state.webhook = false
     
     //loop through our capabilities list and subscribe to all devices if capability has something to subscribe to and route to eventHandler
     for (cap in capabilities) {
@@ -197,11 +199,16 @@ def initialize() {
     subscribe(location, "alarmSystemStatus", alarmHandler)
     
     //TODO Remove before publication Testing Use Only
-    if (!state.accessToken) {
-        createAccessToken()
-    }
+    try {
+        if (!state.accessToken) {
+            createAccessToken()
+        }    
     def url = "Testing URL is " + getApiServerUrl() + "/api/smartapps/installations/${app.id}?access_token=${state.accessToken}"
     debug(url)
+    }
+    catch (e) {
+    log.error "Error generating access token, make sure oauth is enabled in IDE, My SmartApps, Open-Dash, App Settings oauth section."
+    }
     //TODO End removal area
 }
 
@@ -821,6 +828,25 @@ def getWeather() {
 }
 
 /**
+* Gets webhook on/off and updates state var
+*
+* @param params.id is the device id
+* @return renders json
+*/
+def getWebhook() {
+	debug("listDeviceEvents called")
+    def option = params?.option
+    if (option == "on") {
+    	state.webhook = true
+    } else if (option == "off") {
+    	state.webhook = false
+    } else {
+        httpError(404, "Option not found")
+    }
+    render contentType: "text/json", data: new JsonBuilder(option).toPrettyString()
+}
+
+/**
 * Handles the subscribed event and updates state variable
 *
 * @param evt is the event object
@@ -828,8 +854,9 @@ def getWeather() {
 def eventHandler(evt) {
 	debug("eventHandler called")
     //send to webhook api
-    logField(evt) { it.toString() }
-
+    if(state.webhook) {
+        logField(evt) { it.toString() }
+    }
     def js = eventJson(evt) //.inspect().toString()
     if (!state.updates) state.updates = []
     def x = state.updates.findAll { js.id == it.id }

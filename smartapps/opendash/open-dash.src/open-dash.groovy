@@ -199,11 +199,16 @@ def initialize() {
     subscribe(location, "alarmSystemStatus", alarmHandler)
     
     //TODO Remove before publication Testing Use Only
-    if (!state.accessToken) {
-        createAccessToken()
-    }
+    try {
+        if (!state.accessToken) {
+            createAccessToken()
+        }    
     def url = "Testing URL is " + getApiServerUrl() + "/api/smartapps/installations/${app.id}?access_token=${state.accessToken}"
     debug(url)
+    }
+    catch (e) {
+    log.error "Error generating access token, make sure oauth is enabled in IDE, My SmartApps, Open-Dash, App Settings oauth section."
+    }
     //TODO End removal area
 }
 

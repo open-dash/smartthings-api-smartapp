@@ -69,68 +69,67 @@ mappings {
 
 // our capabilities list
 private def getCapabilities() {
-    [   //Capability Prefrence Reference			Display Name					Subscribed Name						Subscribe Attribute        
-        ["capability.accelerationSensor",			"Accelaration Sensor",			"accelerations",					"acceleration"				],
-        ["capability.actuator",						"Actuator",						"actuators",						""							],
-        ["capability.alarm",						"Alarm",						"alarms",							"alarm"						],
-        ["capability.audioNotification",			"Audio Notification",			"audioNotifications",				""							],
-        ["capability.battery",						"Battery",						"batteries",						"battery"					],
-        ["capability.beacon",						"Beacon",						"beacons",							"presence"					],
-        ["capability.button",						"Button",						"buttons",							"button"					],
-        ["capability.carbonDioxideMeasurement",		"Carbon Dioxide Measurement",	"carbonDioxideMeasurements",		"carbonDioxide"				],
-        ["capability.carbonMonoxideDetector",		"Carbon Monoxide Detector",		"carbonMonoxideDetectors",			"carbonMonoxide"			],
-        ["capability.colorControl",					"Color Control",				"colorControls",					""							],
-        ["capability.colorTemperature",				"Color Temperature",			"colorTemperatures",				"colorTemperature"			],
-        ["capability.consumable",					"Consumable",					"consumables",						"consumable"				],
-        ["capability.contactSensor",	  			"Contact",						"contactSensors",					"contact"					],
-        ["capability.doorControl",	  				"Door Control",					"doorControls",						"door"						],
-        ["capability.energyMeter",					"Energy Meter",					"energyMeters",						"energy"					],
-        ["capability.estimatedTimeOfArrival",		"ETA",							"estimatedTimeOfArrivals",			"eta"						],
-        ["capability.garageDoorControl",			"Garage Door Control",			"garageDoorControls",				"door"						],
-        ["capability.illuminanceMeasurement",		"Illuminance",					"illuminanceMeasurements",			"illuminance"				],
-        ["capability.imageCapture",					"Image Capture",				"imageCaptures",					"image"						],
-        ["capability.indicator",					"Indicator",					"indicators",						"indicatorStatus"			],
-        ["capability.lock" ,						"Lock",							"locks",							"lock"						],
-        ["capability.mediaController" ,				"Media Controller",				"mediaControllers",					""							],
-        ["capability.momentary" ,					"Momentary",					"momentaries",						""							],
-        ["capability.motionSensor",					"Motion",						"motionSensors",					"motion"					],
-        ["capability.musicPlayer",					"Music Player",					"musicPlayer",						""							],
-        ["capability.pHMeasurement",				"pH Measurement",				"pHMeasurements",					"pH"						],
-        ["capability.powerMeter",					"Power Meter",					"powerMeters",						"power"						],
-        ["capability.power",						"Power",						"powers",							"powerSource"				],
-        ["capability.presenceSensor",				"Presence",						"presenceSensors",					"presence"					],
-        ["capability.relativeHumidityMeasurement",	"Humidity",						"relativeHumidityMeasurements",		"humidity"					],
-        ["capability.relaySwitch",					"Relay Switch",					"relaySwitches",					"switch"					],
-        ["capability.sensor",						"Sensor",						"sensors",							""							],
-        ["capability.shockSensor",					"Shock Sensor",					"shockSensors",						"shock"						],
-        ["capability.signalStrength",				"Signal Strength",				"signalStrengths",					""							],
-        ["capability.sleepSensor",					"Sleep Sensor",					"sleepSensors",						"sleeping"					],
-        ["capability.smokeDetector",				"Smoke Detector",				"smokeDetectors",					"smoke"						],
-        ["capability.soundSensor",					"Sound Sensor",					"soundSensors",						"sound"						],
-        ["capability.speechRecognition",			"Speech Recognition",			"speechRecognitions",				"phraseSpoken"				],
-        ["capability.stepSensor",					"Step Sensor",					"stepSensors",						"steps"						],
-        ["capability.switch",						"Switches", 						"switches",							"switch"					],
-        ["capability.switchLevel",					"Level",						"switchLevels",						"level"						],
-        ["capability.soundPressureLevel",			"Sound Pressure Level",			"soundPressureLevels",				"soundPressureLevel"		],
-        ["capability.tamperAlert",					"Tamper Alert",					"tamperAlert",						"tamper"					],
-        ["capability.temperatureMeasurement" , 		"Temperature", 					"temperatureMeasurements",			"temperature"				],
-        ["capability.thermostat" , 					"Thermostat", 					"thermostats",						""							],
-        ["capability.thermostatCoolingSetpoint" , 	"Thermostat Cooling Setpoint", 	"thermostatCoolingSetpoints",		"coolingSetpoint"			],
-        ["capability.thermostatFanMode" , 			"Thermostat Fan Mode", 			"thermostatFanModes",				"thermostatFanMode"			],
-        ["capability.thermostatHeatingSetpoint" , 	"Thermostat Heating Setpoint", 	"thermostatHeatingSetpoints",		"heatingSetpoint"			],
-        ["capability.thermostatMode" , 				"Thermostat Mode", 				"thermostatModes",					"thermostatMode"			],
-        ["capability.thermostatOperatingState",		"Thermostat Operating State",	"thermostatOperatingStates",		"thermostatOperatingState"	],
-        ["capability.thermostatSetpoint",			"Thermostat Setpoint",			"thermostatSetpoints",				"thermostatSetpoint"		],
-        ["capability.threeAxis",					"Three Axis",					"threeAxises",						"threeAxis"					],
-        ["capability.tone",							"Tone",							"tones",							""							],
-        ["capability.touchSensor",					"Touch Sensor",					"touchSensors",						"touch"						],
-        ["capability.trackingMusicPlayer",			"Tracking Music Player",		"trackingMusicPlayers",				""							],
-        ["capability.ultravioletIndex",				"Ultraviolet Index",			"ultravioletIndexes",				"ultravioletIndex"			],
-        ["capability.soundPressureLevel",			"Sound Pressure Level",			"soundPressureLevels",				""							],
-        ["capability.valve",						"Valve",						"valves",							"contact"					],
-        ["capability.voltageMeasurement",			"Voltage Measurement",			"voltageMeasurements",				"voltage"					],
-        ["capability.waterSensor",					"Water Sensor",					"waterSensors",						"water"						],
-        ["capability.windowShade",					"Window Shade",					"windowShades",						"windowShade"				],
+    [   //Capability Prefrence Reference			Display Name					Subscribed Name						Subscribe Attribute(s)        
+        ["capability.accelerationSensor",			"Accelaration Sensor",			"accelerations",					"acceleration"],
+        ["capability.actuator",						"Actuator",						"actuators",						""],
+        ["capability.alarm",						"Alarm",						"alarms",							"alarm"],
+        ["capability.audioNotification",			"Audio Notification",			"audioNotifications",				""],
+        ["capability.battery",						"Battery",						"batteries",						"battery"],
+        ["capability.beacon",						"Beacon",						"beacons",							"presence"],
+        ["capability.button",						"Button",						"buttons",							"button"],
+        ["capability.carbonDioxideMeasurement",		"Carbon Dioxide Measurement",	"carbonDioxideMeasurements",		"carbonDioxide"],
+        ["capability.carbonMonoxideDetector",		"Carbon Monoxide Detector",		"carbonMonoxideDetectors",			"carbonMonoxide"],
+        ["capability.colorControl",					"Color Control",				"colorControls",					["color","hue","saturation"] ],
+        ["capability.colorTemperature",				"Color Temperature",			"colorTemperatures",				"colorTemperature"],
+        ["capability.consumable",					"Consumable",					"consumables",						"consumable"],
+        ["capability.contactSensor",	  			"Contact",						"contactSensors",					"contact"],
+        ["capability.doorControl",	  				"Door Control",					"doorControls",						"door"],
+        ["capability.energyMeter",					"Energy Meter",					"energyMeters",						"energy"],
+        ["capability.estimatedTimeOfArrival",		"ETA",							"estimatedTimeOfArrivals",			"eta"],
+        ["capability.garageDoorControl",			"Garage Door Control",			"garageDoorControls",				"door"],
+        ["capability.illuminanceMeasurement",		"Illuminance",					"illuminanceMeasurements",			"illuminance"],
+        ["capability.imageCapture",					"Image Capture",				"imageCaptures",					"image"],
+        ["capability.indicator",					"Indicator",					"indicators",						"indicatorStatus"],
+        ["capability.lock" ,						"Lock",							"locks",							"lock"],
+        ["capability.mediaController" ,				"Media Controller",				"mediaControllers",					["activities", "currentActivity"] ],
+        ["capability.momentary" ,					"Momentary",					"momentaries",						""],
+        ["capability.motionSensor",					"Motion",						"motionSensors",					"motion"],
+        ["capability.musicPlayer",					"Music Player",					"musicPlayer",						["level", "mute", "status", "trackData", "trackDescription"] ],
+        ["capability.pHMeasurement",				"pH Measurement",				"pHMeasurements",					"pH"],
+        ["capability.powerMeter",					"Power Meter",					"powerMeters",						"power"],
+        ["capability.power",						"Power",						"powers",							"powerSource"],
+        ["capability.presenceSensor",				"Presence",						"presenceSensors",					"presence"],
+        ["capability.relativeHumidityMeasurement",	"Humidity",						"relativeHumidityMeasurements",		"humidity"],
+        ["capability.relaySwitch",					"Relay Switch",					"relaySwitches",					"switch"],
+        ["capability.sensor",						"Sensor",						"sensors",							""],
+        ["capability.shockSensor",					"Shock Sensor",					"shockSensors",						"shock"],
+        ["capability.signalStrength",				"Signal Strength",				"signalStrengths",					""],
+        ["capability.sleepSensor",					"Sleep Sensor",					"sleepSensors",						"sleeping"],
+        ["capability.smokeDetector",				"Smoke Detector",				"smokeDetectors",					["smoke","carbonMonoxide"] ],
+        ["capability.soundSensor",					"Sound Sensor",					"soundSensors",						"sound"],
+        ["capability.speechRecognition",			"Speech Recognition",			"speechRecognitions",				"phraseSpoken"],
+        ["capability.stepSensor",					"Step Sensor",					"stepSensors",						["goal","steps"] ],
+        ["capability.switch",						"Switches", 					"switches",							"switch"],
+        ["capability.switchLevel",					"Level",						"switchLevels",						"level"],
+        ["capability.soundPressureLevel",			"Sound Pressure Level",			"soundPressureLevels",				"soundPressureLevel"],
+        ["capability.tamperAlert",					"Tamper Alert",					"tamperAlert",						"tamper"],
+        ["capability.temperatureMeasurement" , 		"Temperature", 					"temperatureMeasurements",			"temperature"],
+        ["capability.thermostat" , 					"Thermostat", 					"thermostats",						["coolingSetpoint","heatingSetpoint","thermostatFanMode","thermostatMode","thermostatOperatingState","thermostatSetpoint"] ],
+        ["capability.thermostatCoolingSetpoint" , 	"Thermostat Cooling Setpoint", 	"thermostatCoolingSetpoints",		"coolingSetpoint"],
+        ["capability.thermostatFanMode" , 			"Thermostat Fan Mode", 			"thermostatFanModes",				"thermostatFanMode"],
+        ["capability.thermostatHeatingSetpoint" , 	"Thermostat Heating Setpoint", 	"thermostatHeatingSetpoints",		"heatingSetpoint"],
+        ["capability.thermostatMode" , 				"Thermostat Mode", 				"thermostatModes",					"thermostatMode"],
+        ["capability.thermostatOperatingState",		"Thermostat Operating State",	"thermostatOperatingStates",		"thermostatOperatingState"],
+        ["capability.thermostatSetpoint",			"Thermostat Setpoint",			"thermostatSetpoints",				"thermostatSetpoint"],
+        ["capability.threeAxis",					"Three Axis",					"threeAxises",						"threeAxis"],
+        ["capability.tone",							"Tone",							"tones",							""],
+        ["capability.touchSensor",					"Touch Sensor",					"touchSensors",						"touch"],
+        ["capability.trackingMusicPlayer",			"Tracking Music Player",		"trackingMusicPlayers",				""],
+        ["capability.ultravioletIndex",				"Ultraviolet Index",			"ultravioletIndexes",				"ultravioletIndex"],
+        ["capability.valve",						"Valve",						"valves",							["contact", "valve"] ],
+        ["capability.voltageMeasurement",			"Voltage Measurement",			"voltageMeasurements",				"voltage"],
+        ["capability.waterSensor",					"Water Sensor",					"waterSensors",						"water"],
+        ["capability.windowShade",					"Window Shade",					"windowShades",						"windowShade"],
     ]  
 }
 
@@ -185,18 +184,25 @@ def initialize() {
     //init updates state var if null
     if (!state.updates) state.updates = []
     if (!state.webhook) state.webhook = false
-    
     //loop through our capabilities list and subscribe to all devices if capability has something to subscribe to and route to eventHandler
     for (cap in capabilities) {
         if(cap[3] != "") {
             if(settings[cap[2]]) {
-            	subscribe(settings[cap[2]], cap[3], eventHandler)
+            	//if single attribute
+                if (cap[3] instanceof String) {
+                	subscribe(settings[cap[2]], cap[3], eventHandler)
+                } else { //assume a map of attributes
+            		cap[3].each {
+            			subscribe(settings[cap[2]], it, eventHandler)
+                	}	
+                }
             }
         }
     }
-    
     //subscribe to SHM location status changes and route to alarmHandler
     subscribe(location, "alarmSystemStatus", alarmHandler)
+    
+    //TODO Implement purging Updates state var on a schedule for events older than X days
     
     //TODO Remove before publication Testing Use Only
     try {

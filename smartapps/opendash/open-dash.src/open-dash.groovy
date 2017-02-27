@@ -153,7 +153,7 @@ preferences {
              description: "Tap to view the Open-Dash website in mobile browser")
     }
     section("Send Notifications?") {
-        input("recipients", "contact", title: "Send notifications to") {
+        input("recipients", "contact", title: "Send notifications to", required:false) {
             input "phone", "phone", title: "Warn with text message (optional)",
                 description: "Phone Number", required: false
         }
@@ -684,7 +684,7 @@ def sendDeviceCommandSecondary() {
     def command = params?.command
     def commandType = secondaryType.find { it.key == command.toString()}?.value
     debug(commandType)
-    def secondary = params.secondary.asType(commandType) //TODO need to test all possible commandTypes and see if it converts properly
+    def secondary = params?.secondary?.asType(commandType) //TODO need to test all possible commandTypes and see if it converts properly
 
     device."$command"(secondary)
     if(!command) {

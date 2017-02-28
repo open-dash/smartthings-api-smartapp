@@ -626,6 +626,11 @@ def sendDevicesCommands() {
             if(!it.value) {
                 if (approvedCommands.contains(it.command)) {
                     debug("Sending command ${it.command} to Device id ${it.id}")
+                    log.debug(it.command)
+                    if (it.command == "toggle") {
+                    	it.command = "off"
+                    	if (device.currentValue("switch") == "off") { it.command = "on" }
+                    }
                     device."$it.command"()  
                     results << [ id : it.id, status : "success", command : it.command, state: [deviceItem(device, true)] ]
                 }
@@ -655,7 +660,12 @@ def sendDeviceCommand() {
     def device = findDevice(id) 
     def command = params.command
     def secondary_command = params.level
-    if (approvedCommands.contains(command)) {
+    if (approvedCommands.contains(command)) 
+    {
+        if (command == "toggle") {
+            command = "off"
+            if (device.currentValue("switch") == "off") { command = "on" }
+        }
         device."$command"()  
     } else  {
         httpError(404, "Command not found")

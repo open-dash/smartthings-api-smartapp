@@ -243,7 +243,7 @@ def alarmHandler(evt) {
 */
 def getSHMStatus() {
 	debug("getSHMStatus called")
-    def alarmSystemStatus = "${location?.currentState("alarmSystemStatus").stringValue}"
+    def alarmSystemStatus = "${location?.currentState("alarmSystemStatus")?.stringValue}"
     debug("SHM Status is " + alarmSystemStatus)
     render contentType: "text/json", data: new JsonBuilder(alarmSystemStatus).toPrettyString()
 }
@@ -351,18 +351,22 @@ def getHubDetail() {
     debug("getting hub detail for id: " + id)
     if(id) {
         def hub = location.hubs?.find{it.id == id}
-        def result = [:]
-        //put the id and name into the result
-        ["id", "name"].each {
-            result << [(it) : hub."$it"]
-        }
-        ["firmwareVersionString", "localIP", "localSrvPortTCP", "zigbeeEui", "zigbeeId", "type"].each {
-            result << [(it) : hub."$it"]
-        }
-        result << ["type" : hub.type as String]
+        if(!hub) {
+            httpError(404, "Hub not found")
+        } else {
+            def result = [:]
+            //put the id and name into the result
+            ["id", "name"].each {
+                result << [(it) : hub."$it"]
+            }
+            ["firmwareVersionString", "localIP", "localSrvPortTCP", "zigbeeEui", "zigbeeId", "type"].each {
+                result << [(it) : hub."$it"]
+            }
+            result << ["type" : hub.type as String]
 
-        debug("Returning HUB: $result")
-        render contentType: "text/json", data: new JsonBuilder(result).toPrettyString()
+            debug("Returning HUB: $result")
+            render contentType: "text/json", data: new JsonBuilder(result).toPrettyString()
+        }
     }
 }
 
@@ -657,28 +661,21 @@ def sendDevicesCommands() {
 def sendDeviceCommand() {
 	debug("sendDeviceCommand called")
     def id = params?.id
-    def device = findDevice(id) 
+    def device = findDevice(id)
     def command = params.command
-    def secondary_command = params.level
-    if (approvedCommands.contains(command)) 
-    {
-        if (command == "toggle") {
-            command = "off"
-            if (device.currentValue("switch") == "off") { command = "on" }
-        }
-        device."$command"()  
-    } else  {
-        httpError(404, "Command not found")
-    }
-    if(!command) {
-        httpError(404, "Device not found")
-    }
     if(!device) {
         httpError(404, "Device not found")
-    } else {
-        debug("Executing command: $command on device: $device.displayName")
-        render contentType: "text/json", data: new JsonBuilder(deviceItem(device, true)).toPrettyString()
     }
+    if (!approvedCommands.contains(command)) {
+        httpError(404, "Command not found")
+    }
+    if (command == "toggle") {
+        command = "off"
+        if (device.currentValue("switch") == "off") { command = "on" }
+    }
+    device."$command"()
+    debug("Executing command: $command on device: $device.displayName")
+    render contentType: "text/json", data: new JsonBuilder(deviceItem(device, true)).toPrettyString()
 }
 
 /**
@@ -692,20 +689,19 @@ def sendDeviceCommandSecondary() {
     def id = params?.id
     def device = findDevice(id) 
     def command = params?.command
+    if(!device) {
+        httpError(404, "Device not found")
+    }
+    if (!approvedCommands.contains(command)) {
+        httpError(404, "Command not found")
+    }
     def commandType = secondaryType.find { it.key == command.toString()}?.value
     debug(commandType)
     def secondary = params?.secondary?.asType(commandType) //TODO need to test all possible commandTypes and see if it converts properly
 
     device."$command"(secondary)
-    if(!command) {
-        httpError(404, "Device not found")
-    }
-    if(!device) {
-        httpError(404, "Device not found")
-    } else {
-        debug("Executing with secondary command: $command $secondary on device: $device.displayName")
-        render contentType: "text/json", data: new JsonBuilder(deviceItem(device, true)).toPrettyString()
-    }
+    debug("Executing with secondary command: $command $secondary on device: $device.displayName")
+    render contentType: "text/json", data: new JsonBuilder(deviceItem(device, true)).toPrettyString()
 }
 
 /**
@@ -807,7 +803,7 @@ def getWeather() {
     else {
         log.warn "Forecast not found"
     }
-    obs << [ illuminance : estimateLux(sunriseDate, sunsetDate, weatherIcon) ]
+    obs << [ illuminance : estimateLux(sunriseDate, sunsetDate, obs.weatherIcon) ]
     // Alerts
     def alerts = get("alerts")?.alerts
     def newKeys = alerts?.collect{it.type + it.date_epoch} ?: []
@@ -823,7 +819,7 @@ def getWeather() {
             oldKeys = []
         }
         //send(name: "alertKeys", value: newKeys.encodeAsJSON(), displayed: false)
-        obs << [aleryKeys : newKeys.encodeAsJSON() ]
+        obs << [alertKeys : newKeys.encodeAsJSON() ]
         def newAlerts = false
         alerts.each {alert ->
             if (!oldKeys.contains(alert.type + alert.date_epoch)) {

@@ -803,7 +803,7 @@ def getWeather() {
     else {
         log.warn "Forecast not found"
     }
-    obs << [ illuminance : estimateLux(sunriseDate, sunsetDate, obs.weatherIcon) ]
+    obs << [ illuminance : estimateLux(sunriseDate, sunsetDate, obs.icon) ]
     // Alerts
     def alerts = get("alerts")?.alerts
     def newKeys = alerts?.collect{it.type + it.date_epoch} ?: []

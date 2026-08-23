@@ -948,7 +948,7 @@ def findDevice(id) {
 	debug("findDevice called")
     def device = null
     capabilities.find { 
-        settings[it[2]].find { d ->
+        settings[it[2]]?.find { d ->
             if (d.id == id) {
                 device = d
                 return true

@@ -523,11 +523,15 @@ def listDevices() {
     def id = params?.id
     // if there is an id parameter, list only that device. Otherwise list all devices in location
     if(id) {
-        def device = findDevice(id)    
-        render contentType: "text/json", data: new JsonBuilder(deviceItem(device, true)).toPrettyString()
+        def device = findDevice(id)
+        if (!device) {
+            httpError(404, "Device not found")
+        } else {
+            render contentType: "text/json", data: new JsonBuilder(deviceItem(device, true)).toPrettyString()
+        }
     } else {
         def result = []
-        result << allSubscribed.collect{deviceItem(it, false)}                
+        result << allSubscribed.collect{deviceItem(it, false)}
         render contentType: "text/json", data: new JsonBuilder(result[0]).toPrettyString()
     }
 }
@@ -829,7 +833,7 @@ def getWeather() {
             }
         }
 
-        if (!newAlerts && device.currentValue("alert") != noneString) {
+        if (!newAlerts && obs.alertString != noneString) {
             obs << [ alertString : noneString ]
         }
     }
@@ -1083,10 +1087,10 @@ private eventJson(evt) {
     //find device by id
     def device = findDevice(evt.deviceId)
     def attrsAndVals = []
-        device.supportedAttributes?.each {
-        	def attribs = ["name" : (it.name), "currentValue" : device.currentValue(it.name), "dataType" : it.dataType]
-            attrsAndVals << attribs
-        }
+    device?.supportedAttributes?.each {
+        def attribs = ["name" : (it.name), "currentValue" : device.currentValue(it.name), "dataType" : it.dataType]
+        attrsAndVals << attribs
+    }
     update.attributes =   attrsAndVals
     //update.value = evt.value
     update.name = evt.displayName

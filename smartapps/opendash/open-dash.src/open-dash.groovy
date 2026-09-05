@@ -530,9 +530,8 @@ def listDevices() {
             render contentType: "text/json", data: new JsonBuilder(deviceItem(device, true)).toPrettyString()
         }
     } else {
-        def result = []
-        result << allSubscribed.collect{deviceItem(it, false)}
-        render contentType: "text/json", data: new JsonBuilder(result[0]).toPrettyString()
+        def result = allSubscribed.collect{deviceItem(it, false)}
+        render contentType: "text/json", data: new JsonBuilder(result).toPrettyString()
     }
 }
 

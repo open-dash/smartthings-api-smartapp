@@ -571,7 +571,7 @@ def listDeviceCommands() {
         httpError(404, "Device not found")
     } else {
         device.supportedCommands?.each {
-            result << ["command" : it.name ]
+            result << ["command" : it.name, "params" : [:]]
         }
     }
     render contentType: "text/json", data: new JsonBuilder(result).toPrettyString()
@@ -727,23 +727,21 @@ def allDevices() {
 	debug("allDevices called")
     def allAttributes = []
 
-    allSubscribed.each {
-        it.collect{ i ->
-            def deviceData = [:]
+    allSubscribed.each { i ->
+        def deviceData = [:]
 
-            deviceData << [name: i?.displayName, label: i?.name, type: i?.typeName, id: i?.id, date: i?.events()[0]?.date, model: i?.modelName, manufacturer: i?.manufacturerName ]
-            def attributes = [:]
-            i.supportedAttributes.each {
-                attributes << [(it.toString()) : i.currentState(it.toString())?.value]
-            }
-            deviceData << [ "attributes" : attributes ]
-            def cmds = []
-            i.supportedCommands?.each {
-                cmds << ["command" : it.name ]
-            }
-            deviceData << [ "commands" : cmds ] //i.supportedCommands.toString() ]  //TODO fix this to parse to an object
-            allAttributes << deviceData
+        deviceData << [name: i?.displayName, label: i?.name, type: i?.typeName, id: i?.id, date: i?.events()[0]?.date, model: i?.modelName, manufacturer: i?.manufacturerName ]
+        def attributes = [:]
+        i.supportedAttributes.each {
+            attributes << [(it.toString()) : i.currentState(it.toString())?.value]
         }
+        deviceData << [ "attributes" : attributes ]
+        def cmds = []
+        i.supportedCommands?.each {
+            cmds << ["command" : it.name, "params" : [:]]
+        }
+        deviceData << [ "commands" : cmds ]
+        allAttributes << deviceData
     }
     render contentType: "text/json", data: new JsonBuilder(allAttributes).toPrettyString()
 }
@@ -756,12 +754,10 @@ def allDevices() {
 def listDeviceTypes() {
 	debug("listDeviceTypes called")
     def deviceData = []
-    allSubscribed?.each {
-        it.collect{ i ->    
-            if (!deviceData.contains(i?.typeName)) {
-                deviceData << i?.typeName  
-            }
-        } 
+    allSubscribed?.each { i ->
+        if (!deviceData.contains(i?.typeName)) {
+            deviceData << i?.typeName
+        }
     }
     render contentType: "text/json", data: new JsonBuilder(deviceData).toPrettyString()
 }
@@ -849,7 +845,7 @@ def getWeather() {
 * @return renders json
 */
 def getWebhook() {
-	debug("listDeviceEvents called")
+	debug("getWebhook called")
     def option = params?.option
     if (option == "on") {
     	state.webhook = true

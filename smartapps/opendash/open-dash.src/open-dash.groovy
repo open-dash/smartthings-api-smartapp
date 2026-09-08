@@ -474,7 +474,6 @@ def listRoutines() {
     // if there is an id parameter, list only that routine. Otherwise list all routines in location
     if(id) {
         def routine = location.helloHome?.getPhrases().find{it.id == id}
-        def myRoutine = [:]
         if(!routine) {
             httpError(404, "Routine not found")
         } else {
@@ -777,8 +776,6 @@ def getWeather() {
     def today = localDate("GMT${obs.local_tz_offset}")
     def ltf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm")
     ltf.setTimeZone(TimeZone.getTimeZone("GMT${obs.local_tz_offset}"))
-    def utf = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-    utf.setTimeZone(TimeZone.getTimeZone("GMT"))
 
     def sunriseDate = ltf.parse("${today} ${a.sunrise.hour}:${a.sunrise.minute}")
     def sunsetDate = ltf.parse("${today} ${a.sunset.hour}:${a.sunset.minute}")
@@ -822,7 +819,6 @@ def getWeather() {
         def newAlerts = false
         alerts.each {alert ->
             if (!oldKeys.contains(alert.type + alert.date_epoch)) {
-                def msg = "${alert.description} from ${alert.date} until ${alert.expires}"
                 obs << [ alertString : alert.description ]
                 newAlerts = true
             }
